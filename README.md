@@ -4,7 +4,8 @@ This repository contains code for analysing the evolution of South Africa’s me
 
 # DATA 
 When validating our data do we look for proportions of intermediate to large or do we check how it matches the Commission's Data Set.
-<img width="7315" height="4733" alt="image" src="https://github.com/user-attachments/assets/04e635e4-c4d7-4cee-b584-6d2b802c6494" />
+<img width="1313" height="590" alt="image" src="https://github.com/user-attachments/assets/ad2cdf29-9b28-4597-abf4-758a4e0538d5" />
+
 
 
 # BLOOMBERG DATA 
