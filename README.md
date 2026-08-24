@@ -5,6 +5,10 @@ This repository contains code for analysing the evolution of South Africa’s me
 # DATA 
 When validating our data do we look for proportions of intermediate to large or do we check how it matches the Commission's Data Set.
 
+# BLOOMBERG DATA 
+
+With the bloomberg data I want to classify transactions that would meet the thresholds based on turnover alone , then based on assets alone , and those that would have based on the combined value.
+
 
 <img width="4160" height="1984" alt="sa_merger_notifications" src="https://github.com/user-attachments/assets/af9fd4ff-d9a0-49cd-98d5-ed05577446aa" />
 
