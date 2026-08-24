@@ -7,7 +7,7 @@ When validating our data do we look for proportions of intermediate to large or 
 
 # BLOOMBERG DATA 
 
-With the bloomberg data I want to classify transactions that would meet the thresholds based on turnover alone , then based on assets alone , and those that would have based on the combined value.
+With the bloomberg data I want to classify transactions that would meet the thresholds based on turnover alone , then based on assets alone , and those that would have based on the combined value.When comparing this to the macro variables we may need to use rolling averages , logging the data and structural breaks [check OECD paper for inspiration , they used 3-point rolling average ]
 
 
 <img width="4160" height="1984" alt="sa_merger_notifications" src="https://github.com/user-attachments/assets/af9fd4ff-d9a0-49cd-98d5-ed05577446aa" />
