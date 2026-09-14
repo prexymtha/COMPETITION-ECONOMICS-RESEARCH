@@ -1,0 +1,117 @@
+# ============================================================
+# Data Analysis — SA M&A Threshold Dissertation
+# ============================================================
+
+# ---- Packages (loaded once) ----
+library(readxl)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(patchwork)
+
+# ---- Load data ----
+file_path <- "C:/Users/pmnha/Downloads/SA_MA_Threshold_Analysis_1999-2025_1.xlsx"
+madata <- read_excel(file_path)
+
+# ---- Inspect ----
+str(madata)
+dim(madata)
+head(madata)
+colSums(is.na(madata))
+summary(madata)
+
+
+# ============================================================
+# 1. Turnover / Assets — Histogram + Box Plot panel (log10 scale)
+# ============================================================
+
+vars <- c("Target Sales/Revenue/Turnover", "Target Total Assets",
+          "Acquirer Sales/Revenue/Turnover", "Acquirer Total Assets")
+
+plot_data <- madata %>%
+  select(all_of(vars)) %>%
+  pivot_longer(everything(), names_to = "variable", values_to = "value") %>%
+  filter(!is.na(value), value > 0) %>%       # log requires strictly positive
+  mutate(log_value = log10(value))
+
+make_hist <- function(v) {
+  ggplot(filter(plot_data, variable == v), aes(x = log_value)) +
+    geom_histogram(bins = 30, fill = "lightgrey", color = "black", linewidth = 0.2) +
+    labs(title = paste(v, "— Histogram"), x = "log10(R million)", y = "Count") +
+    theme_minimal(base_size = 9)
+}
+
+make_box <- function(v) {
+  ggplot(filter(plot_data, variable == v), aes(x = log_value)) +
+    geom_boxplot(fill = "lightgrey", color = "black",
+                 outlier.color = "red", outlier.shape = 16, outlier.size = 1.5) +
+    labs(title = paste(v, "— Box Plot"), x = "log10(R million)") +
+    theme_minimal(base_size = 9) +
+    theme(axis.text.y = element_blank())
+}
+
+panel <- (make_hist(vars[1]) | make_box(vars[1])) /
+  (make_hist(vars[2]) | make_box(vars[2])) /
+  (make_hist(vars[3]) | make_box(vars[3])) /
+  (make_hist(vars[4]) | make_box(vars[4]))
+
+panel + plot_annotation(title = "Distribution of Target/Acquirer Turnover and Assets (log10 scale)")
+
+ggsave("turnover_assets_panel.png", panel, width = 11, height = 14, dpi = 150)
+
+
+# ============================================================
+# 2. Macro benchmarks — YoY growth line chart
+# ============================================================
+
+# Derive one row per year from madata itself (NOT a separate sheet —
+# that sheet no longer exists in this file; the macro columns are
+# already here, just repeated once per deal within a year)
+macro <- madata %>%
+  distinct(`Announce Year`, .keep_all = TRUE) %>%
+  select(Year = `Announce Year`,
+         CPI = `CPI Index (Dec 2024=100)`,
+         `Nominal GDP` = `Nominal GDP (R million)`,
+         `Real GDP` = `Real GDP (R million, 2015 prices)`,
+         `GDP Deflator` = `GDP Deflator (Index, 2015=100)`,
+         `Market Cap` = `Market Capitalisation (R million)`) %>%
+  arrange(Year)
+
+# ---- Compute YoY growth (% deviation) for all five series ----
+yoy <- macro %>%
+  transmute(
+    Year,
+    CPI           = (CPI / lag(CPI) - 1) * 100,
+    `Nominal GDP` = (`Nominal GDP` / lag(`Nominal GDP`) - 1) * 100,
+    `Real GDP`    = (`Real GDP` / lag(`Real GDP`) - 1) * 100,
+    `GDP Deflator`= (`GDP Deflator` / lag(`GDP Deflator`) - 1) * 100,
+    `Market Cap`  = (`Market Cap` / lag(`Market Cap`) - 1) * 100
+  ) %>%
+  pivot_longer(-Year, names_to = "series", values_to = "yoy_pct")
+
+# ---- Academic color palette (lightened, spread for distinction) ----
+colors <- c(
+  "CPI"          = "#A83232",  # brick red
+  "Nominal GDP"  = "#35588A",  # steel blue
+  "Real GDP"     = "#4C8C6B",  # sage green
+  "GDP Deflator" = "#B8892B",  # amber/gold
+  "Market Cap"   = "#7D7D8C"   # slate gray
+)
+
+# ---- Plot ----
+p <- ggplot(yoy, aes(x = Year, y = yoy_pct, color = series)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black", alpha = 0.5) +
+  geom_line(linewidth = 0.9) +
+  scale_color_manual(values = colors) +
+  labs(
+    x = "Year",
+    y = "% deviation (YoY growth)",
+    title = "Year-on-Year Growth of Macro Benchmarks, 1999–2026",
+    color = NULL
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(legend.position = "top")
+
+p
+
+ggsave("macro_yoy_panel.png", plot = p, width = 10, height = 9, dpi = 150)
