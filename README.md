@@ -39,6 +39,9 @@ Explain why we use Nominal GDP ( it's issues with conflating economic activity a
 
 <img width="2385" height="1916" alt="image" src="https://github.com/user-attachments/assets/d7d242ad-a572-4881-8e94-da04c65fa902" />
 
+<img width="4160" height="1984" alt="image" src="https://github.com/user-attachments/assets/3b2cec42-cfb8-4174-b825-186bf29700c7" />
+
+
 
 Good general question to pause on. After initial inspection (structure, missingness, summary stats, distribution plots), the standard workflow moves through roughly these stages — I'll frame each with the R tools you'd use, since that's the point of this exercise:
 
