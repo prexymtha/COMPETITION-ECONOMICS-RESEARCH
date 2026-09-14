@@ -24,3 +24,6 @@ What values does our data take and how often ?
 
 Explain why we use Nominal GDP ( it's issues with conflating economic activity and price effects in representing changes in national accounts ) , how this links to sales and inventory and m&a activity in the economy , how real gdp solves this or the gdp deflator to account for local nexus and market capitalisation , is gnp an alternative and GDP measured in PPP and what is the economic rationale for choosing that ? Could we have used other variables ? And lastly market capitalisation .
 
+<img width="1484" height="1331" alt="image" src="https://github.com/user-attachments/assets/6b1c76e3-14cc-4a5b-ba36-46b6ed32edee" />
+
+
