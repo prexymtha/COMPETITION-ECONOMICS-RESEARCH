@@ -69,3 +69,34 @@ Tables, figures, and writing them up in a way a reader can audit — which loops
 Where are you hoping to go next — deeper into the exploration/relationship stage (stage 3), or are you ready to think about the classification/threshold test itself (stage 5)?
 
 
+Construction of the Transaction Sample
+Source
+We evaluate four Bloomberg MA<GO> exports totalling 13,483 rows: two queries, split at 20 August 2015, each run twice with different columns. Matching on type, date, target and acquirer, the ticker exports strictly contain the others, which lose 710 deals and add none; shared values agree throughout. We take the ticker exports as the row universe, 7,105 rows.
+Bloomberg data are compiled from filings, press releases, news wires and direct submissions, and unlisted firms are covered subject to disclosure, and coverage "can be thinner for smaller or non-reportable transactions". [Transactions near the intermediate threshold are therefore under-represented, so counts of deals sitting just below the notification boundary are lower bounds.] Sector fields return current, not point-in-time, classifications. [A firm acquired in 2003 carries its 2026 sector, so sector results describe classification today rather than at the deal date.]
+Defects
+Sixteen rows carry a negative turnover across only three distinct values and three firms; we read this as a sign error and correct it. [Left negative, these firms would fail the turnover route automatically and be recorded as asset-driven, so the correction changes which measure is decisive for them.] One deal value is overstated a thousandfold, at forty-eight times the acquirer’s balance sheet, which we flag and do not use. [Deal value enters no statutory test, so this affects descriptive statistics on transaction size only.]
+The financial columns are firm-level: of 238 acquirers appearing three or more times, every one carries an identical assets figure across all its deals. [These are each firm’s latest accounts, not its position at announcement. The median transaction predates the export by fifteen years, so early deals are tested at present-day size against thresholds set in their own era, overstating how many cleared them.] And 11 per cent of targets are asset descriptions — mineral blocks, property portfolios, tower sites. [Missingness is concentrated on the target side by construction: 53 of the 70 three-value records lack a target-side figure, so transferred-firm results rest on a smaller, non-random subset.]
+Selection
+Section 12(1)(b) provides that a merger may be achieved through purchase of shares, an interest, or assets, so we retain deal types M&A, INV and AST. [Excluding asset acquisitions would have narrowed the population below the statutory definition.] We remove 133 repurchases and unbundlings, which record Shareholders as the acquirer and involve no acquisition of control, 106 joint ventures, 15 firms acquiring their own shares, and 166 naming no acquirer or a placeholder. [The repurchases are 28 complete records of large listed firms; retaining them would tilt the sample further towards that group. The placeholders carry no complete records, so that exclusion is immaterial.] We collapse repeated target–acquirer pairs announced within 365 days, keeping the fullest record. [This is the only judgement in the pipeline that materially moves the sample size; a revised bid left uncollapsed would double-weight the same firms.]
+Result
+This leaves 6,511 unique transactions, of which 476 carry three or four financial values: 406 complete and 70 with three, announced between February 1999 and July 2026. Thirty are Withdrawn or Proposed, which Bloomberg defines as rumoured or non-binding, with no definitive agreement signed; all are complete records and all post-date 2009. We retain them, identifiable by status. [They are not a random thirty: retaining them tilts the sample towards recent large listed transactions. Dropping them gives 446.]
+Cleaning funnel
+Step	Rows
+Raw rows across the four exports	13,483
+Ticker exports only	7,105
+After exact and boundary duplicates	7,095
+Deal types M&A, INV and AST	6,856
+Acquirer and target distinct firms	6,841
+Acquirer is a named firm	6,675
+Unique transactions	6,511
+  with 0 of 4 financial values	2,362
+  with 1 of 4	398
+  with 2 of 4	3,275
+  with 3 of 4	70
+  with 4 of 4	406
+ANALYSIS SAMPLE (3 or 4 values)	476
+  of which Withdrawn or Proposed	30
+Source: Bloomberg MA<GO>.
+
+
+
