@@ -66,7 +66,6 @@ After estimating anything: residual checks, sensitivity to specification choices
 **7. Communicating results**
 Tables, figures, and writing them up in a way a reader can audit — which loops back to habits like the ones we've been building (documenting *why* a row was dropped, not just that it was).
 
-Where are you hoping to go next — deeper into the exploration/relationship stage (stage 3), or are you ready to think about the classification/threshold test itself (stage 5)?
 
 
 Construction of the Transaction Sample
