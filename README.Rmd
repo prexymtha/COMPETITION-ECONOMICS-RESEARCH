@@ -116,3 +116,290 @@ Source: Bloomberg MA<GO>.
 
 
 
+
+
+
+
+
+# Data Analysis 
+
+
+```{r , echo =FALSE}
+# I don't want all of the information to be printed out here 
+library(readr)
+library(dplyr)
+madata <- read_csv("data/ma_classification_blended.csv")
+str(madata)
+dim(madata)
+
+```
+
+
+# EVolution of SA threshold (growth by policy change)
+
+```{r}
+# ============================================================
+# Threshold Growth Chart — Small Multiples, Independent Y-Axes
+# ============================================================
+
+# ---- Packages ----
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+# ---- Step 1: Create the threshold data by hand ----
+# (Table 2: Threshold regimes applied, from your dissertation)
+thresholds <- tibble(
+  Limb      = c("Intermediate: Combined", "Intermediate: Target",
+                "Large: Combined", "Large: Target"),
+  base_1999 = c(50, 5, 3500, 100),
+  v2001     = c(200, 30, 3500, 100),
+  v2009     = c(560, 80, 6600, 190),
+  v2017     = c(600, 100, 6600, 190),
+  v2026     = c(1000, 200, 9500, 280)
+)
+
+# ---- Step 2: Reshape to long format and compute growth ----
+long <- thresholds %>%
+  pivot_longer(-Limb, names_to = "period_end", values_to = "value") %>%
+  group_by(Limb) %>%
+  mutate(
+    increment  = value - lag(value, default = 0),
+    pct_growth = (value / lag(value) - 1) * 100,
+    period = factor(period_end,
+                     levels = c("base_1999", "v2001", "v2009", "v2017", "v2026"),
+                     labels = c("1999 base", "+2001", "+2009", "+2017", "+2026"))
+  ) %>%
+  ungroup()
+
+# ---- Step 3: Build the small-multiples chart ----
+ggplot(long, aes(x = 1, y = increment, fill = period)) +
+  geom_col(width = 0.6, color = "white") +
+  geom_text(
+    aes(label = case_when(
+      period == "1999 base" ~ paste0("R", value, "m"),
+      increment > 0         ~ paste0("+", round(pct_growth), "%"),
+      TRUE                  ~ ""
+    )),
+    position = position_stack(vjust = 0.5),
+    color = "white", fontface = "bold", size = 3
+  ) +
+  facet_wrap(~ Limb, nrow = 1, scales = "free_y") +
+  scale_fill_manual(values = c(
+    "1999 base" = "#D9D9D9", "+2001" = "#35588A",
+    "+2009" = "#A83232", "+2017" = "#4C8C6B", "+2026" = "#B8892B"
+  )) +
+  labs(
+    y = "Threshold Value (R'm)", x = NULL, fill = NULL,
+    title = "Growth of Each Threshold Limb Since 1999",
+    subtitle = "Each panel independently scaled"
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    legend.position = "top",
+    strip.text = element_text(face = "bold")
+  )
+
+# ---- Step 4: Save ----
+ggsave("threshold_growth_small_multiples.png", width = 16, height = 9, dpi = 150)
+```
+
+
+# Different color shade
+
+In nominal terms, South Africa’s merger notification thresholds have evolved in uneven and episodic steps rather than through smooth or uniform adjustment. The most pronounced increase occurred in the 1999–2001 interval, when the intermediate combined threshold rose by 300 per cent and the intermediate target threshold by 500 per cent, while the large-merger thresholds remained unchanged. A second major adjustment followed in 2001–2009, when all four thresholds increased, with nominal growth again stronger for intermediate mergers than for large mergers. By contrast, the 2009–2017 interval was characterised by very limited adjustment: the intermediate combined threshold increased by only 7.1 per cent, the intermediate target threshold by 25 per cent, and the large thresholds did not change. The 2017–2026 revision marked a renewed upward adjustment, with the intermediate target threshold doubling, the intermediate combined threshold rising by 66.7 per cent, and the large thresholds increasing by 43.9 per cent and 47.4 per cent respectively. Overall, the nominal pattern indicates that threshold growth has been concentrated in a few discrete regulatory revisions, with particularly strong increases at the intermediate-merger boundary.
+```{r}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+thresholds <- tibble(
+  Limb      = c("Intermediate: Combined", "Intermediate: Target",
+                "Large: Combined", "Large: Target"),
+  base_1999 = c(50, 5, 3500, 100),
+  v2001     = c(200, 30, 3500, 100),
+  v2009     = c(560, 80, 6600, 190),
+  v2017     = c(600, 100, 6600, 190),
+  v2026     = c(1000, 200, 9500, 280)
+)
+
+long <- thresholds %>%
+  pivot_longer(-Limb, names_to = "period_end", values_to = "value") %>%
+  group_by(Limb) %>%
+  mutate(
+    increment  = value - lag(value, default = 0),
+    pct_growth = (value / lag(value) - 1) * 100,
+    period = factor(period_end,
+                     levels = c("base_1999", "v2001", "v2009", "v2017", "v2026"),
+                     labels = c("1999 base", "+2001", "+2009", "+2017", "+2026")),
+    label_color = if_else(period %in% c("1999 base", "+2001"), "black", "white")
+  ) %>%
+  ungroup()
+
+grays <- c("1999 base" = "#E8E8E8", "+2001" = "#BFBFBF", "+2009" = "#8C8C8C",
+           "+2017" = "#595959", "+2026" = "#262626")
+
+ggplot(long, aes(x = 1, y = increment, fill = period)) +
+  geom_col(width = 0.6, color = "white", linewidth = 0.4) +
+  geom_text(
+    aes(label = case_when(
+          period == "1999 base" ~ paste0("R", value, "m"),
+          increment > 0         ~ paste0("+", round(pct_growth), "%"),
+          TRUE                  ~ ""),
+        color = label_color),
+    position = position_stack(vjust = 0.5), fontface = "bold", size = 3, show.legend = FALSE
+  ) +
+  scale_color_identity() +
+  facet_wrap(~ Limb, nrow = 1, scales = "free_y") +
+  scale_fill_manual(values = grays) +
+  labs(y = "Threshold Value (R'm)", x = NULL, fill = NULL,
+       title = "Growth of Each Threshold Limb Since 1999",
+       subtitle = "Grayscale — each panel independently scaled") +
+  theme_minimal(base_size = 11) +
+  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(),
+        legend.position = "top", strip.text = element_text(face = "bold"))
+
+ggsave("threshold_grayscale.png", width = 16, height = 9, dpi = 150)
+```
+
+
+
+# Question of evolution 
+
+# ============================================================
+# Threshold Benchmark Analysis — reads macro data from the file
+# ============================================================
+```{r}
+library(readr)
+library(dplyr)
+library(tidyr)
+library(purrr)
+library(writexl)
+
+# ---- Step 1: Load your actual data ----
+madata <- read_csv("data/ma_classification_blended.csv")
+# If your file is genuinely .xlsx rather than .csv, swap the line above for:
+# library(readxl); madata <- read_excel("data/your_file.xlsx")
+
+# ---- Step 2: Extract one macro observation per year directly from the file
+# (each deal-row repeats its year's macro figures, so take the first per year) ----
+macro <- madata %>%
+  distinct(Year, .keep_all = TRUE) %>%
+  transmute(
+    Year,
+    CPI  = `CPI Index (Dec 2024=100)`,
+    NGDP = `Nominal GDP (R million)`,
+    RGDP = `Real GDP (R million, 2015 prices)`,
+    DEFL = `GDP Deflator (Index, 2015=100)`,
+    MCAP = `Market Capitalisation (R million)`
+  ) %>%
+  arrange(Year)
+
+# Sanity check: confirm the years you need are actually present and complete
+macro %>% filter(Year %in% c(2001, 2009, 2017, 2026)) %>% print()
+# 2026 will likely be NA/incomplete in your file (partial year) — if so, use 2025
+# as the nearest complete-year proxy, same approach as earlier in this analysis:
+if (any(is.na(macro %>% filter(Year == 2026) %>% select(-Year)))) {
+  proxy_2026 <- macro %>% filter(Year == 2025) %>% mutate(Year = 2026)
+  macro <- macro %>% filter(Year != 2026) %>% bind_rows(proxy_2026)
+  message("2026 macro data incomplete in source file \u2014 using 2025 as proxy.")
+}
+
+# ---- Step 3: Threshold data (still typed by hand — this is legislated,
+# not something that lives as rows in your deal-level data) ----
+actual <- tribble(
+  ~Year, ~IC,   ~IT,  ~LC,   ~LT,
+  1999,   50,    5,   3500,  100,
+  2001,   200,   30,  3500,  100,
+  2009,   560,   80,  6600,  190,
+  2017,   600,   100, 6600,  190,
+  2026,   1000,  200, 9500,  280
+)
+
+limb_names <- c(IC = "Intermediate: Combined", IT = "Intermediate: Target",
+                 LC = "Large: Combined",        LT = "Large: Target")
+bench_names <- c(CPI = "CPI", NGDP = "Nominal GDP", RGDP = "Real GDP",
+                  DEFL = "GDP Deflator", MCAP = "Market Cap")
+base_year <- 2001
+
+# ---- The rest is unchanged from before — same logic, now fed by real data ----
+
+ratios <- actual %>%
+  transmute(Year,
+            `Large:Interm (Combined)` = round(LC/IC, 1),
+            `Large:Interm (Target)`   = round(LT/IT, 1),
+            `Interm: Combined/Target` = round(IC/IT, 1),
+            `Large: Combined/Target`  = round(LC/LT, 1))
+
+nominal_growth <- actual %>%
+  arrange(Year) %>%
+  pivot_longer(-Year, names_to = "limb_code", values_to = "value") %>%
+  group_by(limb_code) %>%
+  mutate(nominal_growth_pct = (value/lag(value) - 1) * 100) %>%
+  ungroup()
+
+predict_years <- c(2009, 2017, 2026)
+base_macro  <- macro %>% filter(Year == base_year)
+base_thresh <- actual %>% filter(Year == base_year)
+
+benchmark_rows <- map_dfr(predict_years, function(yr) {
+  yr_macro <- macro %>% filter(Year == yr)
+  map_dfr(names(limb_names), function(code) {
+    actual_val <- actual %>% filter(Year == yr) %>% pull(all_of(code))
+    base_val   <- base_thresh %>% pull(all_of(code))
+    preds <- map_dfr(names(bench_names), function(b) {
+      growth_factor <- yr_macro[[b]] / base_macro[[b]]
+      predicted <- base_val * growth_factor
+      tibble(Benchmark = bench_names[[b]], predicted_value = predicted,
+             predicted_growth_pct = (growth_factor - 1) * 100,
+             pct_error = (predicted - actual_val) / actual_val * 100)
+    })
+    best <- preds %>% slice_min(abs(pct_error), n = 1)
+    tibble(Year = yr, Limb = limb_names[[code]], actual_value = actual_val,
+           !!!setNames(as.list(preds$predicted_value), paste0(preds$Benchmark, ": Predicted Value (R'm)")),
+           !!!setNames(as.list(preds$predicted_growth_pct), paste0(preds$Benchmark, ": Predicted Growth % (since 2001)")),
+           `Best-Fit Benchmark` = best$Benchmark, `Best-Fit Error %` = round(best$pct_error, 1))
+  })
+})
+
+pred_cols <- setdiff(names(benchmark_rows), c("Year","Limb","actual_value"))
+
+base_rows <- map_dfr(c(1999, 2001), function(yr) {
+  map_dfr(names(limb_names), function(code) {
+    val <- actual %>% filter(Year == yr) %>% pull(all_of(code))
+    row <- as.list(rep("-", length(pred_cols))) %>% setNames(pred_cols)
+    row$Year <- yr; row$Limb <- limb_names[[code]]; row$actual_value <- val
+    as_tibble(row)
+  })
+})
+base_rows <- base_rows %>%
+  left_join(nominal_growth %>% filter(Year == 2001) %>%
+              transmute(Limb = limb_names[limb_code], nom = round(nominal_growth_pct,1)), by = "Limb") %>%
+  mutate(`Nominal Growth % (vs prior revision)` = if_else(Year == 2001, as.character(nom), "-"),
+         `Best-Fit Benchmark` = if_else(Year == 2001, "2001 = base year (nothing to predict)", "-")) %>%
+  select(-nom)
+
+# THE FIX — coerce benchmark_rows' numeric prediction columns to character
+# so they match base_rows' "-" placeholders before bind_rows() stacks them
+benchmark_rows <- benchmark_rows %>%
+  mutate(across(all_of(pred_cols), as.character))
+
+benchmark_rows <- benchmark_rows %>%
+  left_join(nominal_growth %>% filter(Year %in% predict_years) %>%
+              transmute(Year, Limb = limb_names[limb_code], nom = round(nominal_growth_pct,1)),
+            by = c("Year","Limb")) %>%
+  rename(`Actual Value (R'm)` = actual_value) %>%
+  mutate(`Nominal Growth % (vs prior revision)` = as.character(nom)) %>%
+  select(-nom)
+base_rows <- base_rows %>% rename(`Actual Value (R'm)` = actual_value)
+
+master <- bind_rows(base_rows, benchmark_rows) %>%
+  left_join(ratios, by = "Year") %>%
+  arrange(Year, Limb)
+
+print(master, n = Inf, width = Inf)
+write_xlsx(master, "threshold_benchmark_analysis.xlsx")
+```
+
