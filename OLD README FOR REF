@@ -1,0 +1,678 @@
+---
+title: "COMPETITION ECONOMICS RESEARCH"
+author: "Precious Nhamo"
+date: "`r Sys.Date()`"
+output: github_document
+---
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# COMPETITION-ECONOMICS-RESEARCH
+
+This repository contains code for analysing the evolution of South Africa’s merger notification thresholds from 1999 to 2026. Using Bloomberg Mergers &amp; Acquisitions (M&amp;A) data, together with CPI, nominal and real GDP, and market capitalisation as benchmarks, we compare actual threshold paths to counterfactual scenarios against other countries
+
+# DATA 
+When validating our data do we look for proportions of intermediate to large or do we check how it matches the Commission's Data Set.
+<img width="1313" height="590" alt="image" src="https://github.com/user-attachments/assets/ad2cdf29-9b28-4597-abf4-758a4e0538d5" />
+
+
+
+# BLOOMBERG DATA 
+
+With the bloomberg data I want to classify transactions that would meet the thresholds based on turnover alone , then based on assets alone , and those that would have based on the combined value.When comparing this to the macro variables we may need to use rolling averages , logging the data and structural breaks [check OECD paper for inspiration , they used 3-point rolling average ]
+
+What values does our data take and how often ?
+
+<img width="1634" height="2105" alt="image" src="https://github.com/user-attachments/assets/f32c030a-5ebf-42fb-a5ba-cc873ce5ed1d" />
+
+<img width="2084" height="1781" alt="image" src="https://github.com/user-attachments/assets/9a45ef57-ee21-4443-8036-85f9bb2501a8" />
+
+<img width="2382" height="1931" alt="image" src="https://github.com/user-attachments/assets/a30c716c-ebe0-49b9-abb0-6bf8e6576117" />
+
+
+<img width="1933" height="882" alt="image" src="https://github.com/user-attachments/assets/716ad680-4a29-4dac-a505-bf26989f0c47" />
+
+<img width="2233" height="1780" alt="image" src="https://github.com/user-attachments/assets/4c69eb05-af92-40a6-97cc-802bdb4dcb6f" />
+
+
+<img width="4160" height="1984" alt="sa_merger_notifications" src="https://github.com/user-attachments/assets/af9fd4ff-d9a0-49cd-98d5-ed05577446aa" />
+
+<img width="1935" height="1343" alt="image" src="https://github.com/user-attachments/assets/c0614390-5aa0-418d-9b54-b096a6baa745" />
+
+
+# MACROECONOMIC VARIABLES 
+
+Explain why we use Nominal GDP ( it's issues with conflating economic activity and price effects in representing changes in national accounts ) , how this links to sales and inventory and m&a activity in the economy , how real gdp solves this or the gdp deflator to account for local nexus and market capitalisation , is gnp an alternative and GDP measured in PPP and what is the economic rationale for choosing that ? Could we have used other variables ? And lastly market capitalisation .
+
+<img width="1484" height="1331" alt="image" src="https://github.com/user-attachments/assets/6b1c76e3-14cc-4a5b-ba36-46b6ed32edee" />
+
+<img width="2385" height="1916" alt="image" src="https://github.com/user-attachments/assets/d7d242ad-a572-4881-8e94-da04c65fa902" />
+
+<img width="4160" height="1984" alt="image" src="https://github.com/user-attachments/assets/3b2cec42-cfb8-4174-b825-186bf29700c7" />
+
+
+
+Good general question to pause on. After initial inspection (structure, missingness, summary stats, distribution plots), the standard workflow moves through roughly these stages — I'll frame each with the R tools you'd use, since that's the point of this exercise:
+
+**1. Data cleaning decisions, made explicit**
+This is where you decide — and document — how to handle what inspection revealed: missing values (drop? impute? flag?), outliers (keep? cap? investigate individually, like we did with those investment-holding companies?), duplicates, and inconsistent categories (e.g. sector labels that mean the same thing but are spelled differently). The key discipline here is writing the *rule*, not just applying a fix once — `mutate()`, `filter()`, `case_when()` are your main tools, and every decision should be something you could defend in a methods section.
+
+**2. Feature engineering / variable construction**
+Building the variables your actual analysis needs from the raw columns — ratios, logs, growth rates, date-derived fields (year, quarter, regime), categorical bucketing. You've already done a version of this (log-transforming turnover/assets, YoY growth rates, threshold regime matching).
+
+**3. Bivariate/relationship exploration**
+Before modeling, look at how variables relate to each other — correlation matrices (`cor()`, `corrplot`), scatter plots, grouped summaries (`group_by() %>% summarise()`), cross-tabs for categoricals (`table()`). This is where you'd start asking "does deal size correlate with regime?" or "do INV and M&A deals have different turnover distributions?" — relationship questions, not just single-variable distribution questions.
+
+**4. Formal statistical/econometric tests, where relevant**
+Depending on your research question: normality tests if a method assumes it, stationarity tests (ADF/KPSS) if you're doing anything time-series, tests for structural breaks (relevant for your regime-change framing specifically).
+
+**5. Model specification and estimation**
+This is where your actual method lives — for your dissertation, that's likely the classification/threshold analysis itself, and potentially panel or regression work depending on how the paper argues its contribution. This stage depends entirely on your research question, which is why it comes last, not first.
+
+**6. Diagnostics and robustness**
+After estimating anything: residual checks, sensitivity to specification choices, robustness to alternative samples (e.g. 3-value vs 4-value-only subsets, INV vs M&A separately) — checking that your result isn't an artifact of one modeling choice.
+
+**7. Communicating results**
+Tables, figures, and writing them up in a way a reader can audit — which loops back to habits like the ones we've been building (documenting *why* a row was dropped, not just that it was).
+
+
+
+Construction of the Transaction Sample
+Source
+We evaluate four Bloomberg MA<GO> exports totalling 13,483 rows: two queries, split at 20 August 2015, each run twice with different columns. Matching on type, date, target and acquirer, the ticker exports strictly contain the others, which lose 710 deals and add none; shared values agree throughout. We take the ticker exports as the row universe, 7,105 rows.
+Bloomberg data are compiled from filings, press releases, news wires and direct submissions, and unlisted firms are covered subject to disclosure, and coverage "can be thinner for smaller or non-reportable transactions". [Transactions near the intermediate threshold are therefore under-represented, so counts of deals sitting just below the notification boundary are lower bounds.] Sector fields return current, not point-in-time, classifications. [A firm acquired in 2003 carries its 2026 sector, so sector results describe classification today rather than at the deal date.]
+Defects
+Sixteen rows carry a negative turnover across only three distinct values and three firms; we read this as a sign error and correct it. [Left negative, these firms would fail the turnover route automatically and be recorded as asset-driven, so the correction changes which measure is decisive for them.] One deal value is overstated a thousandfold, at forty-eight times the acquirer’s balance sheet, which we flag and do not use. [Deal value enters no statutory test, so this affects descriptive statistics on transaction size only.]
+The financial columns are firm-level: of 238 acquirers appearing three or more times, every one carries an identical assets figure across all its deals. [These are each firm’s latest accounts, not its position at announcement. The median transaction predates the export by fifteen years, so early deals are tested at present-day size against thresholds set in their own era, overstating how many cleared them.] And 11 per cent of targets are asset descriptions — mineral blocks, property portfolios, tower sites. [Missingness is concentrated on the target side by construction: 53 of the 70 three-value records lack a target-side figure, so transferred-firm results rest on a smaller, non-random subset.]
+Selection
+Section 12(1)(b) provides that a merger may be achieved through purchase of shares, an interest, or assets, so we retain deal types M&A, INV and AST. [Excluding asset acquisitions would have narrowed the population below the statutory definition.] We remove 133 repurchases and unbundlings, which record Shareholders as the acquirer and involve no acquisition of control, 106 joint ventures, 15 firms acquiring their own shares, and 166 naming no acquirer or a placeholder. [The repurchases are 28 complete records of large listed firms; retaining them would tilt the sample further towards that group. The placeholders carry no complete records, so that exclusion is immaterial.] We collapse repeated target–acquirer pairs announced within 365 days, keeping the fullest record. [This is the only judgement in the pipeline that materially moves the sample size; a revised bid left uncollapsed would double-weight the same firms.]
+Result
+This leaves 6,511 unique transactions, of which 476 carry three or four financial values: 406 complete and 70 with three, announced between February 1999 and July 2026. Thirty are Withdrawn or Proposed, which Bloomberg defines as rumoured or non-binding, with no definitive agreement signed; all are complete records and all post-date 2009. We retain them, identifiable by status. [They are not a random thirty: retaining them tilts the sample towards recent large listed transactions. Dropping them gives 446.]
+Cleaning funnel
+Step	Rows
+Raw rows across the four exports	13,483
+Ticker exports only	7,105
+After exact and boundary duplicates	7,095
+Deal types M&A, INV and AST	6,856
+Acquirer and target distinct firms	6,841
+Acquirer is a named firm	6,675
+Unique transactions	6,511
+  with 0 of 4 financial values	2,362
+  with 1 of 4	398
+  with 2 of 4	3,275
+  with 3 of 4	70
+  with 4 of 4	406
+ANALYSIS SAMPLE (3 or 4 values)	476
+  of which Withdrawn or Proposed	30
+Source: Bloomberg MA<GO>.
+
+
+
+
+
+
+
+
+
+
+
+# Data Analysis 
+
+
+```{r , echo =FALSE}
+# I don't want all of the information to be printed out here 
+library(readr)
+library(dplyr)
+madata <- read_csv("data/ma_classification_blended.csv")
+str(madata)
+dim(madata)
+
+```
+
+
+# EVolution of SA threshold (growth by policy change)
+
+```{r}
+# ============================================================
+# Threshold Growth Chart — Small Multiples, Independent Y-Axes
+# ============================================================
+
+# ---- Packages ----
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+# ---- Step 1: Create the threshold data by hand ----
+# (Table 2: Threshold regimes applied, from your dissertation)
+thresholds <- tibble(
+  Limb      = c("Intermediate: Combined", "Intermediate: Target",
+                "Large: Combined", "Large: Target"),
+  base_1999 = c(50, 5, 3500, 100),
+  v2001     = c(200, 30, 3500, 100),
+  v2009     = c(560, 80, 6600, 190),
+  v2017     = c(600, 100, 6600, 190),
+  v2026     = c(1000, 200, 9500, 280)
+)
+
+# ---- Step 2: Reshape to long format and compute growth ----
+long <- thresholds %>%
+  pivot_longer(-Limb, names_to = "period_end", values_to = "value") %>%
+  group_by(Limb) %>%
+  mutate(
+    increment  = value - lag(value, default = 0),
+    pct_growth = (value / lag(value) - 1) * 100,
+    period = factor(period_end,
+                     levels = c("base_1999", "v2001", "v2009", "v2017", "v2026"),
+                     labels = c("1999 base", "+2001", "+2009", "+2017", "+2026"))
+  ) %>%
+  ungroup()
+
+# ---- Step 3: Build the small-multiples chart ----
+ggplot(long, aes(x = 1, y = increment, fill = period)) +
+  geom_col(width = 0.6, color = "white") +
+  geom_text(
+    aes(label = case_when(
+      period == "1999 base" ~ paste0("R", value, "m"),
+      increment > 0         ~ paste0("+", round(pct_growth), "%"),
+      TRUE                  ~ ""
+    )),
+    position = position_stack(vjust = 0.5),
+    color = "white", fontface = "bold", size = 3
+  ) +
+  facet_wrap(~ Limb, nrow = 1, scales = "free_y") +
+  scale_fill_manual(values = c(
+    "1999 base" = "#D9D9D9", "+2001" = "#35588A",
+    "+2009" = "#A83232", "+2017" = "#4C8C6B", "+2026" = "#B8892B"
+  )) +
+  labs(
+    y = "Threshold Value (R'm)", x = NULL, fill = NULL,
+    title = "Growth of Each Threshold Limb Since 1999",
+    subtitle = "Each panel independently scaled"
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    legend.position = "top",
+    strip.text = element_text(face = "bold")
+  )
+
+# ---- Step 4: Save ----
+ggsave("threshold_growth_small_multiples.png", width = 16, height = 9, dpi = 150)
+```
+
+
+# Different color shade
+
+In nominal terms, South Africa’s merger notification thresholds have evolved in uneven and episodic steps rather than through smooth or uniform adjustment. The most pronounced increase occurred in the 1999–2001 interval, when the intermediate combined threshold rose by 300 per cent and the intermediate target threshold by 500 per cent, while the large-merger thresholds remained unchanged. A second major adjustment followed in 2001–2009, when all four thresholds increased, with nominal growth again stronger for intermediate mergers than for large mergers. By contrast, the 2009–2017 interval was characterised by very limited adjustment: the intermediate combined threshold increased by only 7.1 per cent, the intermediate target threshold by 25 per cent, and the large thresholds did not change. The 2017–2026 revision marked a renewed upward adjustment, with the intermediate target threshold doubling, the intermediate combined threshold rising by 66.7 per cent, and the large thresholds increasing by 43.9 per cent and 47.4 per cent respectively. Overall, the nominal pattern indicates that threshold growth has been concentrated in a few discrete regulatory revisions, with particularly strong increases at the intermediate-merger boundary.
+```{r}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+thresholds <- tibble(
+  Limb      = c("Intermediate: Combined", "Intermediate: Target",
+                "Large: Combined", "Large: Target"),
+  base_1999 = c(50, 5, 3500, 100),
+  v2001     = c(200, 30, 3500, 100),
+  v2009     = c(560, 80, 6600, 190),
+  v2017     = c(600, 100, 6600, 190),
+  v2026     = c(1000, 200, 9500, 280)
+)
+
+long <- thresholds %>%
+  pivot_longer(-Limb, names_to = "period_end", values_to = "value") %>%
+  group_by(Limb) %>%
+  mutate(
+    increment  = value - lag(value, default = 0),
+    pct_growth = (value / lag(value) - 1) * 100,
+    period = factor(period_end,
+                     levels = c("base_1999", "v2001", "v2009", "v2017", "v2026"),
+                     labels = c("1999 base", "+2001", "+2009", "+2017", "+2026")),
+    label_color = if_else(period %in% c("1999 base", "+2001"), "black", "white")
+  ) %>%
+  ungroup()
+
+grays <- c("1999 base" = "#E8E8E8", "+2001" = "#BFBFBF", "+2009" = "#8C8C8C",
+           "+2017" = "#595959", "+2026" = "#262626")
+
+ggplot(long, aes(x = 1, y = increment, fill = period)) +
+  geom_col(width = 0.6, color = "white", linewidth = 0.4) +
+  geom_text(
+    aes(label = case_when(
+          period == "1999 base" ~ paste0("R", value, "m"),
+          increment > 0         ~ paste0("+", round(pct_growth), "%"),
+          TRUE                  ~ ""),
+        color = label_color),
+    position = position_stack(vjust = 0.5), fontface = "bold", size = 3, show.legend = FALSE
+  ) +
+  scale_color_identity() +
+  facet_wrap(~ Limb, nrow = 1, scales = "free_y") +
+  scale_fill_manual(values = grays) +
+  labs(y = "Threshold Value (R'm)", x = NULL, fill = NULL,
+       title = "Growth of Each Threshold Limb Since 1999",
+       subtitle = "Grayscale — each panel independently scaled") +
+  theme_minimal(base_size = 11) +
+  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(),
+        legend.position = "top", strip.text = element_text(face = "bold"))
+
+ggsave("threshold_grayscale.png", width = 16, height = 9, dpi = 150)
+```
+
+
+
+# QUESTION 1: Counterfactual macroeconomic indexation of merger thresholds
+
+Had the Competition Commission made an explicit or implicit choice in 2001 to index the merger notification thresholds to one of the macroeconomic benchmarks in our data — the Consumer Price Index (CPI), GDP deflator, nominal GDP, real GDP, or market capitalisation — what would each threshold have been at the subsequent revision dates?
+
+Using 2001 as the baseline calibration year, what percentage adjustment would each macroeconomic benchmark have implied at the 2009, 2017, and 2026 revision points, and which benchmark most closely reproduces the actual statutory threshold adjustments observed over this period?
+
+The 1999 thresholds are treated as the initial statutory thresholds, while the 2001 revision is interpreted as an early recalibration following the initial implementation of the merger-control regime. For this reason, the 1999–2001 adjustment is not treated as evidence of a systematic macroeconomic indexation rule.
+
+
+# QUESTION 1: Which macroeconomic benchmark best characterises the evolution of South Africa's merger thresholds?
+
+Taking the 2001 merger thresholds as the baseline, what threshold values would have resulted at the 2009, 2017, and 2026 revision dates if the thresholds had been indexed to (i) the CPI, (ii) the GDP deflator, (iii) nominal GDP, (iv) real GDP, or (v) market capitalisation?
+
+For each benchmark, what cumulative percentage adjustment would have been implied between successive revision dates, and which benchmark most closely tracks the actual statutory threshold adjustments?
+
+The 1999 thresholds are treated as the initial statutory calibration and the 2001 revision as an early recalibration of the new merger-control regime. Accordingly, the 1999–2001 change is reported descriptively but is not used to infer a systematic threshold-adjustment rule.
+
+```{r}
+# ============================================================
+# QUESTION 1: "Had the commission made an implicit or explicit
+# choice to pin the thresholds down to the macroeconomic
+# variables we have in our data in 2001 (given that the 1999
+# were their initial threshold series, the revision shows
+# initial calibration after lessons, so I wouldn't read too
+# much into the 1999-2001 revisions) what would each values
+# have been at the revision points & what percentage growth
+# would they have stipulated, and with commission's current
+# data which macro benchmark predicted that better?"
+# ============================================================
+
+library(readr)
+library(dplyr)
+library(tidyr)
+library(purrr)
+library(kableExtra)
+
+# ---- Load data, extract macro series ----
+madata <- read_csv("data/ma_classification_blended.csv", show_col_types = FALSE)
+
+macro <- madata %>%
+  distinct(Year, .keep_all = TRUE) %>%
+  transmute(Year,
+            CPI  = `CPI Index (Dec 2024=100)`,
+            NGDP = `Nominal GDP (R million)`,
+            RGDP = `Real GDP (R million, 2015 prices)`,
+            DEFL = `GDP Deflator (Index, 2015=100)`,
+            MCAP = `Market Capitalisation (R million)`) %>%
+  arrange(Year) %>%
+  filter(!is.na(CPI))  # drops incomplete 2026 row from the file itself
+
+# ---- 2026-so-far values (verified/supplied separately, not in the file) ----
+# TODO: cite source for each figure (Stats SA / SARB / JSE release + date)
+macro <- macro %>%
+  bind_rows(tibble(Year = 2026, CPI = 105.8, NGDP = 8025000, RGDP = 4720000,
+                    DEFL = 8025000/4720000*100, MCAP = 25090000))
+
+# ---- Threshold data (Table 2, legislated figures) ----
+actual <- tribble(
+  ~Year, ~IC,   ~IT,  ~LC,   ~LT,
+  1999,   50,    5,   3500,  100,
+  2001,   200,   30,  3500,  100,
+  2009,   560,   80,  6600,  190,
+  2017,   600,   100, 6600,  190,
+  2026,   1000,  200, 9500,  280
+)
+limb_names  <- c(IC = "Interm: Combined", IT = "Interm: Target",
+                  LC = "Large: Combined",  LT = "Large: Target")
+bench_names <- c(CPI = "CPI", NGDP = "Nominal GDP", RGDP = "Real GDP",
+                  DEFL = "GDP Deflator", MCAP = "Market Cap")
+base_year <- 2001
+
+# ---- Build predictions, single base = 2001 ----
+predict_years <- c(2009, 2017, 2026)
+base_macro  <- macro %>% filter(Year == base_year)
+base_thresh <- actual %>% filter(Year == base_year)
+
+q1_data <- map_dfr(predict_years, function(yr) {
+  yr_macro <- macro %>% filter(Year == yr)
+  map_dfr(names(limb_names), function(code) {
+    actual_val <- actual %>% filter(Year == yr) %>% pull(all_of(code))
+    base_val   <- base_thresh %>% pull(all_of(code))
+    map_dfr(names(bench_names), function(b) {
+      gf <- yr_macro[[b]] / base_macro[[b]]
+      predicted <- base_val * gf
+      tibble(Year = yr, Limb = limb_names[[code]], Benchmark = bench_names[[b]],
+             `Predicted (R'm)` = round(predicted, 1),
+             `Predicted Growth %` = round((gf - 1) * 100, 1),
+             `Error vs Actual %` = round((predicted - actual_val) / actual_val * 100, 1))
+    })
+  })
+})
+
+# ---- ONE INVERTED (metrics-as-rows) TABLE PER YEAR, sized to fit a page ----
+for (yr in predict_years) {
+
+  yr_block <- q1_data %>% filter(Year == yr)
+
+  # transpose: rows = Benchmark x metric, columns = Limb
+  wide <- yr_block %>%
+    pivot_longer(c(`Predicted (R'm)`, `Predicted Growth %`, `Error vs Actual %`),
+                 names_to = "Metric", values_to = "value") %>%
+    unite("row_label", Benchmark, Metric, sep = " \u2014 ") %>%
+    pivot_wider(id_cols = row_label, names_from = Limb, values_from = value)
+
+  actual_row <- actual %>% filter(Year == yr) %>%
+    pivot_longer(-Year, names_to = "code", values_to = "val") %>%
+    mutate(Limb = limb_names[code]) %>%
+    select(Limb, val) %>%
+    pivot_wider(names_from = Limb, values_from = val) %>%
+    mutate(row_label = "Actual Value (R'm)", .before = 1)
+
+  final_tbl <- bind_rows(actual_row, wide)
+
+  print(
+    kbl(final_tbl, format = "latex", booktabs = TRUE, longtable = FALSE,
+        col.names = c("", names(final_tbl)[-1]),
+        caption = paste0("Threshold values predicted under each macro benchmark vs actual, ", yr,
+                          " (single base = 2001)"),
+        label = paste0("tab:q1-", yr)) %>%
+      kable_styling(latex_options = c("scale_down", "hold_position"),
+                    font_size = 8) %>%
+      column_spec(1, width = "5cm") %>%
+      row_spec(0, bold = TRUE)
+  )
+}
+
+
+# ============================================================
+# QUESTION 2: "Had this choice been made within interval, that
+# is reanchoring to 2001, 2009, 2017, 2026, what would have
+# this implied, given the commission's reports states different
+# reasons at each interval? Just verify the macro benchmark
+# data because some of them are already indexed to 2024 etc
+# (handle that)."
+# ============================================================
+# Note: base-year indexing is handled automatically here because
+# every comparison below uses a ratio of the index at two points
+# in time — the arbitrary base year (Dec 2024 for CPI, 2015 for
+# the GDP Deflator) cancels out algebraically in a ratio and
+# never needs separate adjustment.
+# 1999-2001 is EXCLUDED per the framing above: it's the initial
+# post-enactment calibration, not a benchmark-driven revision.
+
+intervals <- list(c(2001, 2009), c(2009, 2017), c(2017, 2026))
+
+q2_data <- map_dfr(intervals, function(iv) {
+  start_yr <- iv[1]; end_yr <- iv[2]
+  start_macro <- macro %>% filter(Year == start_yr)
+  end_macro   <- macro %>% filter(Year == end_yr)
+  start_thresh <- actual %>% filter(Year == start_yr)
+  end_thresh   <- actual %>% filter(Year == end_yr)
+
+  map_dfr(names(limb_names), function(code) {
+    a_start <- start_thresh %>% pull(all_of(code))
+    a_end   <- end_thresh %>% pull(all_of(code))
+    map_dfr(names(bench_names), function(b) {
+      gf <- end_macro[[b]] / start_macro[[b]]
+      implied <- a_start * gf
+      tibble(Interval = paste0(start_yr, "\u2192", end_yr), Limb = limb_names[[code]],
+             Benchmark = bench_names[[b]],
+             `Implied (R'm)` = round(implied, 1),
+             `Implied Growth %` = round((gf - 1) * 100, 1),
+             `Error vs Actual %` = round((implied - a_end) / a_end * 100, 1))
+    })
+  })
+})
+
+# ---- ONE INVERTED TABLE PER INTERVAL ----
+for (iv in intervals) {
+  label <- paste0(iv[1], "\u2192", iv[2])
+  iv_block <- q2_data %>% filter(Interval == label)
+
+  wide <- iv_block %>%
+    pivot_longer(c(`Implied (R'm)`, `Implied Growth %`, `Error vs Actual %`),
+                 names_to = "Metric", values_to = "value") %>%
+    unite("row_label", Benchmark, Metric, sep = " \u2014 ") %>%
+    pivot_wider(id_cols = row_label, names_from = Limb, values_from = value)
+
+  actual_rows <- bind_rows(
+    actual %>% filter(Year == iv[1]) %>%
+      pivot_longer(-Year, names_to="code", values_to="val") %>%
+      mutate(Limb=limb_names[code]) %>% select(Limb,val) %>%
+      pivot_wider(names_from=Limb, values_from=val) %>%
+      mutate(row_label = paste0("Actual Start (", iv[1], ", R'm)"), .before=1),
+    actual %>% filter(Year == iv[2]) %>%
+      pivot_longer(-Year, names_to="code", values_to="val") %>%
+      mutate(Limb=limb_names[code]) %>% select(Limb,val) %>%
+      pivot_wider(names_from=Limb, values_from=val) %>%
+      mutate(row_label = paste0("Actual End (", iv[2], ", R'm)"), .before=1)
+  )
+
+  final_tbl <- bind_rows(actual_rows, wide)
+
+  print(
+    kbl(final_tbl, format = "latex", booktabs = TRUE,
+        col.names = c("", names(final_tbl)[-1]),
+        caption = paste0("Threshold growth reanchored per interval, ", label,
+                          " \u2014 which macro benchmark implied best fit"),
+        label = paste0("tab:q2-", gsub("\u2192","-",label))) %>%
+      kable_styling(latex_options = c("scale_down", "hold_position"),
+                    font_size = 8) %>%
+      column_spec(1, width = "5cm") %>%
+      row_spec(0, bold = TRUE)
+  )
+}
+```
+
+## Research questions and empirical approach
+
+The empirical analysis asks how South Africa's merger notification thresholds have evolved, whether their adjustment can be rationalised by movements in observable measures of the economy, and how South Africa's approach compares with alternative methods of setting merger thresholds.
+
+### Question 1: What if the Commission had chosen a macroeconomic benchmark in 2001?
+
+Had the Competition Commission chosen in 2001 to anchor the merger notification thresholds to a macroeconomic benchmark, what would each of the four nominal thresholds values have been at the subsequent revision points in 2009, 2017 and 2026?
+
+The benchmarks considered are the Consumer Price Index (CPI), GDP deflator, nominal GDP, real GDP and JSE market capitalisation. For each benchmark, I calculate the percentage growth between 2001 and each subsequent revision date and use this growth to construct the corresponding counterfactual intermediate combined, intermediate target-firm, large combined and large target-firm thresholds. I then compare these counterfactual values with the thresholds actually implemented by the Commission to determine which benchmark most closely tracks the observed statutory path.
+
+I use 2001 rather than 1999 as the principal starting point. The 1999 values were the initial thresholds under the new merger-control regime, while the 2001 revision followed an early review of merger activity. The 1999–2001 adjustment is therefore reported descriptively but is not treated as evidence of a systematic threshold-adjustment rule. Njisane et al. similarly describe the 2001 change as following a review of merger trends since the inception of the Competition Act. :contentReference[oaicite:0]{index=0}
+
+### Question 2: What if the benchmark were reconsidered at each revision?
+
+Had the Commission reconsidered the appropriate benchmark at each threshold revision, what adjustment would each macroeconomic benchmark have implied over the individual intervals 2001–2009, 2009–2017 and 2017–2026?
+
+Unlike Question 1, the thresholds are re-anchored to the actual statutory value at the beginning of each interval. The percentage growth in CPI, the GDP deflator, nominal GDP, real GDP and JSE market capitalisation over that interval is then applied to that statutory starting value. This allows the analysis to ask whether different revisions appear to have followed different economic benchmarks rather than assuming a single adjustment rule throughout the entire period.
+
+This is particularly relevant because the Commission's stated rationale has differed across revisions. Njisane et al. report that the 2009 adjustment was informed by nominal GDP and market capitalisation, whereas the 2017 adjustment was based on real GDP growth. :contentReference[oaicite:1]{index=1}
+
+### Question 3: How large were the revisions relative to alternative threshold-setting methods?
+
+How do the actual statutory adjustments compare with the threshold increases examined by Njisane et al. and with the World Bank's economy-size benchmarking approach?
+
+Njisane et al.'s scenarios are used as sensitivity benchmarks . Their target-firm thresholds are increased by 5%, 10%, 15% and 20%, while combined thresholds are increased by 10%, 20%, 30%, 40% and 45%. They also examine joint increases of 15% in the target threshold with either 20% or 40% in the combined threshold. These percentage bands are compared with the actual percentage change in each South African threshold over the 2001–2009, 2009–2017 and 2017–2026 intervals. :contentReference[oaicite:2]{index=2}
+
+The World Bank exercise is treated separately because it is a cross-country benchmarking model rather than a time-series indexation rule. It estimates the relationship between the logarithm of merger thresholds and the logarithm of GDP across comparable jurisdictions and then predicts thresholds for an economy of South Africa's size. The resulting World Bank estimates are compared with the actual South African thresholds and with the macroeconomic counterfactuals from Questions 1 and 2. :contentReference[oaicite:3]{index=3}
+
+As a sensitivity exercise, the percentage-adjustment scenarios considered by Njisane et al. are applied to the statutory threshold in force at the beginning of each revision interval. This extends their scenario-based approach, originally applied to the October 2017 thresholds and the 2016–2018 merger database, to the historical threshold path.How does the magnitude of the actual revision compare with moderate threshold shocks that prior South African research considered plausible enough to test for error-cost consequences?
+
+
+```{r}
+library(tidyverse)
+library(kableExtra)
+
+# ============================================================
+# QUESTION 3 (Njisane et al. 2021 sensitivity comparison)
+# How large were SA's actual threshold revisions relative to
+# the target/combined increases Njisane et al. tested, and what
+# would their two selected joint scenarios have implied at each
+# SA revision point?
+# ============================================================
+
+# ---- 1. Actual SA threshold history (R million) ----
+sa_thresholds <- tribble(
+  ~year, ~int_combined, ~int_target, ~large_combined, ~large_target,
+  2001,      200,           30,           3500,          100,
+  2009,      560,           80,           6600,          190,
+  2017,      600,          100,           6600,          190,
+  2026,     1000,          200,           9500,          280
+)
+
+# Nominal growth between consecutive SA revision points, by limb
+actual_growth <- sa_thresholds %>%
+  pivot_longer(-year, names_to = "limb_code", values_to = "threshold") %>%
+  group_by(limb_code) %>%
+  arrange(year, .by_group = TRUE) %>%
+  mutate(
+    start_year        = lag(year),
+    start_threshold   = lag(threshold),
+    interval          = paste0(start_year, "\u2192", year),
+    actual_growth_pct = 100 * (threshold / start_threshold - 1)
+  ) %>%
+  ungroup() %>%
+  filter(!is.na(start_year)) %>%                 # drops the 1999 anchor row (no lag)
+  mutate(
+    limb_type = if_else(str_detect(limb_code, "target"), "Target", "Combined"),
+    limb = recode(limb_code,
+                  int_combined   = "Intermediate: Combined",
+                  int_target     = "Intermediate: Target",
+                  large_combined = "Large: Combined",
+                  large_target   = "Large: Target")
+  ) %>%
+  select(interval, limb, limb_type,
+         start_threshold, actual_end_threshold = threshold, actual_growth_pct)
+
+# ---- 2. Njisane et al. (2021) single-limb sensitivity scenarios ----
+njisane_scenarios <- tribble(
+  ~limb_type, ~scenario_pct,
+  "Target",    5,  "Target",   10, "Target",   15, "Target",   20,
+  "Combined", 10,  "Combined", 20, "Combined", 30, "Combined", 40, "Combined", 45
+)
+
+njisane_range <- njisane_scenarios %>%
+  group_by(limb_type) %>%
+  summarise(njisane_min = min(scenario_pct),
+            njisane_max = max(scenario_pct), .groups = "drop")
+
+# Closest single Njisane scenario to each actual revision (nearest by pp, no
+# "match" label implied — see note below)
+closest_njisane <- actual_growth %>%
+  left_join(njisane_scenarios, by = "limb_type") %>%
+  mutate(diff_pp = actual_growth_pct - scenario_pct) %>%
+  group_by(interval, limb) %>%
+  slice_min(abs(diff_pp), n = 1, with_ties = FALSE) %>%
+  ungroup() %>%
+  select(interval, limb, closest_njisane_pct = scenario_pct, closest_diff_pp = diff_pp)
+
+# ---- 3. Njisane's two selected JOINT scenarios, applied to each start threshold ----
+joint_scenarios <- tribble(
+  ~scenario_label,             ~target_pct, ~combined_pct,
+  "15%T / 20%C implied",       15,          20,
+  "15%T / 40%C implied",       15,          40
+)
+
+njisane_joint_wide <- actual_growth %>%
+  select(interval, limb, limb_type, start_threshold) %>%
+  crossing(joint_scenarios) %>%
+  mutate(
+    applied_pct       = if_else(limb_type == "Target", target_pct, combined_pct),
+    implied_threshold = start_threshold * (1 + applied_pct / 100)
+  ) %>%
+  select(interval, limb, scenario_label, implied_threshold) %>%
+  pivot_wider(names_from = scenario_label, values_from = implied_threshold)
+
+# ---- 4. ONE combined table ----
+q3_table <- actual_growth %>%
+  left_join(njisane_range,      by = "limb_type") %>%
+  mutate(
+    njisane_range_label = paste0(njisane_min, "\u2013", njisane_max, "%"),
+    position_vs_range = case_when(
+      actual_growth_pct < njisane_min ~ "Below range",
+      actual_growth_pct > njisane_max ~ "Above range",
+      TRUE ~ "Within range"
+    )
+  ) %>%
+  left_join(closest_njisane,    by = c("interval", "limb")) %>%
+  left_join(njisane_joint_wide, by = c("interval", "limb")) %>%
+  transmute(
+    Interval              = interval,
+    Limb                  = limb,
+    `Start (R'm)`         = round(start_threshold, 1),
+    `Actual End (R'm)`    = round(actual_end_threshold, 1),
+    `Actual Growth %`     = round(actual_growth_pct, 1),
+    `Njisane Range`       = njisane_range_label,
+    `Position`            = position_vs_range,
+    `Closest Njisane %`   = closest_njisane_pct,
+    `Diff (pp)`           = round(closest_diff_pp, 1),
+    `15%T/20%C (R'm)`     = round(`15%T / 20%C implied`, 1),
+    `15%T/40%C (R'm)`     = round(`15%T / 40%C implied`, 1)
+  ) %>%
+  arrange(Interval, Limb)
+
+print(
+  kbl(q3_table, format = "latex", booktabs = TRUE, longtable = TRUE,
+      caption = "SA threshold revisions vs. Njisane et al. (2021) sensitivity scenarios",
+      label = "tab:q3-njisane") %>%
+    kable_styling(latex_options = c("scale_down", "hold_position", "repeat_header"),
+                  font_size = 7) %>%
+    row_spec(0, bold = TRUE)
+)
+
+q3_table
+
+# ---- 5. ONE graph: actual growth vs Njisane's tested range, faceted by interval ----
+plot_data <- actual_growth %>% left_join(njisane_range, by = "limb_type")
+
+ggplot(plot_data, aes(x = limb, y = actual_growth_pct)) +
+  geom_col(fill = "grey40", width = 0.6) +
+  geom_errorbar(aes(ymin = njisane_min, ymax = njisane_max),
+                width = 0.15, linewidth = 0.7, colour = "black") +
+  facet_wrap(~ interval, nrow = 1, scales = "free_x") +
+  labs(
+    title = "Actual SA threshold growth vs. Njisane et al. (2021) tested range",
+    subtitle = "Bars: actual nominal growth. Error bars: min–max of Njisane's tested scenarios for that limb type.",
+    x = NULL, y = "Nominal threshold growth (%)"
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.grid.minor = element_blank(),
+    strip.text = element_text(face = "bold")
+  )
+```
+
+
+### Question 4: How have the comparator jurisdictions evolved?
+
+What were the initial and current merger-notification thresholds in the United States, European Union and Brazil; how have these thresholds been adjusted over time; what considerations determine their levels; and how do their threshold designs differ from South Africa's?
+
+The comparison therefore considers more than nominal threshold values. For each jurisdiction I record the initial and current threshold, the threshold metric, whether adjustment is automatic or discretionary, the economic variable used for adjustment where applicable, the frequency of adjustment, and whether the threshold applies to the transaction, the combined firms, the target firm or individual merging parties.
+
+The United States provides an example of systematic indexation: its principal HSR thresholds are adjusted annually according to changes in gross national product. The minimum size-of-transaction threshold, originally $50 million, is $133.9 million in 2026. :contentReference[oaicite:4]{index=4} The EU instead relies primarily on turnover thresholds: the original €5 billion worldwide combined and €250 million EU-wide individual thresholds remain part of the current regime, with an additional lower multi-jurisdictional route introduced subsequently. :contentReference[oaicite:5]{index=5} Brazil uses domestic turnover tests for two different economic groups; the operative thresholds have been R$750 million and R$75 million since 2012. :contentReference[oaicite:6]{index=6} These systems provide useful contrasts with South Africa's combined-firm and target-firm turnover-or-asset thresholds and its episodic adjustment process.
+
+### Macroeconomic data and measurement
+
+All benchmark comparisons are based on growth rates rather than the absolute levels of the macroeconomic indices. Rebasings therefore do not affect the results provided that each growth calculation uses a consistently linked historical series.
+
+CPI is measured using the official headline CPI series, currently referenced to December 2024 = 100. The GDP deflator is treated as a price-level measure and is constructed or obtained from a consistent national-accounts vintage. Nominal GDP is measured at current prices, while real GDP is measured at constant 2015 prices. The financial-market benchmark is JSE market capitalisation.
+
+For each benchmark \(B\), the counterfactual threshold is calculated as:
+
+\[
+T_{t}^{B}=T_{s}\left(\frac{B_t}{B_s}\right),
+\]
+
+where \(T_s\) is the statutory threshold at the chosen anchor date, \(B_s\) is the benchmark value at that date, and \(B_t\) is its value at the subsequent revision date. The implied percentage adjustment is:
+
+\[
+g_{s,t}^{B}=\left(\frac{B_t}{B_s}-1\right)\times100.
+\]
+
+For Question 1, \(s=2001\) throughout. For Question 2, \(s\) is reset to the statutory threshold at the beginning of each interval: 2001, 2009 and 2017.
