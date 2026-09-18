@@ -281,6 +281,29 @@ macro <- madata %>%
 # Sept 2026 -- CPI: Jan-Jul avg; Real/Nominal GDP: Q1-Q2/Q1 annualised).
 # Market cap and ALSI 2026 already came from the dated JSE/ALSI snapshots
 # merged in above, so only the GDP-derived figures need overriding here. ----
+# ---- 2026-so-far values (partial-year, as of Sept 2026).
+# CPI: Jan-Jul avg; Real/Nominal GDP: Q1-Q2/Q1 annualised (GDP-derived,
+# entered here). Market cap and ALSI 2026 come from the dated JSE/ALSI
+# snapshots already sitting in mcap_annual / alsi_annual from the merge
+# step above -- pulled in here rather than hardcoded a second time. ----
+
+row_2026 <- tibble(
+  Year = 2026,
+  CPI  = 105.8,
+  NGDP = 8025000,
+  RGDP = 4720000,
+  DEFL = 8025000 / 4720000 * 100,
+  MCAP = mcap_annual %>% filter(Year == 2026) %>% pull(`Market cap (R million)`),
+  ALSI = alsi_annual %>% filter(Year == 2026) %>% pull(ALSI)
+)
+
+macro <- macro %>%
+  filter(Year != 2026) %>%   # drop any incomplete/partial 2026 row first
+  bind_rows(row_2026) %>%
+  arrange(Year)
+
+# sanity check
+macro %>% filter(Year == 2026)
 macro <- macro %>%
   rows_update(
     tibble(Year = 2026, CPI = 105.8, NGDP = 8025000, RGDP = 4720000,
@@ -572,7 +595,7 @@ print(
     row_spec(0, bold = TRUE)
 )
 
-q3_table
+
 
 # ---- 5. ONE graph: actual growth vs Njisane's tested range, faceted by interval ----
 plot_data <- actual_growth %>% left_join(njisane_range, by = "limb_type")
