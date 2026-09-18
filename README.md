@@ -314,7 +314,7 @@ transactions. Dropping them gives 446.*
     ##   ..   `Attr: Any Stake-Change Type Tagged` = col_logical(),
     ##   ..   `Attr: Formal Offer Process (Tender/Mandatory/Squeeze Out)` = col_logical()
     ##   .. )
-    ##  - attr(*, "problems")=<pointer: 0x0000018b399fddb0>
+    ##  - attr(*, "problems")=<pointer: 0x000001d24d9fde20>
 
     ## [1] 633  73
 
@@ -1342,3 +1342,376 @@ print(
     ## \textbf{South Africa} & 1999: Intermediate R50m + R5m; Large R3.5bn + R100m & Intermediate R1bn + R200m; Large R9.5bn + R280m & Local turnover OR assets; combined + target limbs & Discretionary Minister/Commission determination & Has varied between revisions (see Q1/Q2) & Episodic\\*
     ## \end{longtable}
     ## \endgroup{}
+
+# 4 Descriptive Analysis
+
+The threshold data reveal substantial variation in the evolution of
+South Africa’s merger-notification regime. The size and timing of
+threshold adjustments differ across the four statutory values, and the
+economic benchmark that most closely reproduces these adjustments also
+varies across revision periods. In particular, there is little
+descriptive evidence that South Africa has followed a single, stable
+indexation rule over the life of the regime. The analysis below first
+considers the statutory evolution of the thresholds and the experience
+of the three comparator jurisdictions. It then compares the South
+African thresholds with alternative economic benchmark paths.
+
+## 4.1 The Evolution of South African Merger Thresholds
+
+Figure 1 illustrates the evolution of South Africa’s intermediate and
+large merger thresholds since the introduction of the current
+merger-control regime in 1999. The graph confirms that threshold
+adjustment has been intermittent and that the four statutory values have
+not moved proportionately.
+
+**\[Figure 1: South African merger-notification thresholds,
+1999–2026\]**
+
+The initial intermediate thresholds were R50 million for the
+combined-firm requirement and R5 million for the target-firm
+requirement. The corresponding large-merger thresholds were R3.5 billion
+and R100 million. The first revision, in 2001, increased the
+intermediate thresholds to R200 million and R30 million respectively but
+left both large-merger thresholds unchanged. Njisane et al. describe
+this first adjustment as following a review of merger trends since the
+introduction of the regime.
+
+The next revision, implemented in 2009, affected all four values. The
+intermediate combined threshold increased from R200 million to R560
+million and the target threshold from R30 million to R80 million. The
+large combined threshold increased from R3.5 billion to R6.6 billion,
+while the large target threshold increased from R100 million to R190
+million. These represent increases of 180.0%, 166.7%, 88.6% and 90.0%,
+respectively.
+
+Threshold adjustment was considerably more limited between 2009 and
+2017. The intermediate combined threshold increased by 7.1%, from R560
+million to R600 million, and the target threshold increased by 25%, from
+R80 million to R100 million. Neither large-merger threshold changed.
+Njisane et al. report that the 2009 revision was informed by nominal GDP
+and market capitalisation, while the subsequent revision was based on
+changes in real GDP.
+
+The 2026 revision represents a comparatively large adjustment,
+particularly at the intermediate-merger boundary. The intermediate
+combined threshold increased from R600 million to R1 billion, an
+increase of 66.7%, while the target threshold doubled from R100 million
+to R200 million. The large combined threshold increased from R6.6
+billion to R9.5 billion, or 43.9%, while the large target threshold
+increased by 47.4%, from R190 million to R280 million.
+
+Figure 1 therefore highlights two features of the South African
+threshold history. First, long periods in which nominal values remained
+unchanged or changed only slightly have been followed by relatively
+large discrete adjustments. Second, the adjustments have differed across
+the intermediate and large thresholds. The threshold regime consequently
+cannot be characterised accurately as a single monetary boundary that
+has simply been moved upwards periodically.
+
+This distinction is relevant to the historical rationale for threshold
+revision. Before the 2009 adjustment, the Commission argued that the
+unchanged thresholds had declined in economic significance as prices,
+nominal output and JSE market capitalisation increased. The Commission
+therefore viewed the fixed nominal values as widening the regulatory net
+over time. This rationale is consistent with the more general
+threshold-setting problem identified by the ICN: fixed notification
+thresholds may require periodic review as economic conditions change,
+although the ICN does not prescribe a single index that should govern
+this adjustment.
+
+### 4.1.1 Comparison with Selected Jurisdictions
+
+Table 1 compares the structure and adjustment mechanism of the South
+African regime with those of the United States, European Union and
+Brazil.
+
+**\[Table 1: Merger-notification threshold design and adjustment across
+selected jurisdictions\]**
+
+The comparison shows substantial differences in both the construction
+and maintenance of merger thresholds. The United States provides the
+clearest example of a systematic adjustment rule. Its principal HSR
+monetary thresholds are adjusted annually with changes in gross national
+product. The adjustment mechanism is therefore determined in advance
+rather than selected periodically.
+
+The European Union follows a different approach. Its principal
+merger-control thresholds are based on combined worldwide turnover and
+the individual EU turnover of the merging parties. The principal
+monetary values have remained broadly unchanged, while jurisdictional
+coverage is supplemented by an additional multi-Member-State route and
+referral mechanisms. There is no automatic CPI-, GDP- or GNP-based
+adjustment.
+
+Brazil also relies principally on turnover, but uses separate domestic
+turnover requirements for two economic groups rather than a South
+African-style combined-firm and target-firm test. Its current monetary
+thresholds were established in 2012 and are not subject to automatic
+macroeconomic indexation.
+
+South Africa therefore differs from all three comparators. It uses
+separate intermediate and large classifications and, within each
+category, requires both a combined-firm requirement and a target-firm
+requirement. It also permits assets or turnover to determine whether the
+monetary screen is satisfied. More broadly, the comparison confirms that
+there is no common international approach to maintaining merger
+thresholds over time. This is consistent with the ICN’s survey evidence,
+which identifies historical benchmarking, comparisons with similarly
+situated jurisdictions and inflation adjustment as alternative
+approaches used by competition authorities.
+
+The international comparison is therefore informative primarily about
+**adjustment architecture**, rather than about the relative nominal
+level of thresholds. The US represents automatic indexation; the EU
+largely maintains long-lived nominal turnover criteria; Brazil allows
+discretionary adjustment; and South Africa has relied on periodic
+revisions motivated by different economic considerations.
+
+------------------------------------------------------------------------
+
+## 4.2 South African Thresholds and Economic Benchmarks
+
+We next consider whether the statutory adjustments resemble changes in
+broader measures of economic activity. Figure 2 compares the evolution
+of the actual thresholds with counterfactual paths based on CPI, the GDP
+deflator, nominal GDP, real GDP, JSE market capitalisation and the
+FTSE/JSE All Share Index.
+
+**\[Figure 2: Actual and benchmark-implied merger-threshold paths\]**
+
+The benchmark paths should not be interpreted as alternative estimates
+of a uniquely correct threshold. Rather, they illustrate different ways
+in which the economic significance of a fixed monetary threshold might
+be maintained. This distinction is particularly relevant to South Africa
+because the Commission itself has referred to different economic
+measures when motivating previous revisions.
+
+For purposes of comparison, a benchmark is said to track an actual
+threshold more closely when the value implied by growth in that
+benchmark has a smaller absolute percentage deviation from the statutory
+threshold eventually adopted. Tracking therefore refers only to
+**descriptive fit**; it does not establish that the Commission used that
+variable in determining the threshold.
+
+### 4.2.1 The 2001–2009 Revision
+
+Figure 3(a) presents the benchmark-implied changes between 2001 and
+2009. The results show a clear difference between the intermediate and
+large-merger thresholds.
+
+**\[Figure 3: Actual and benchmark-implied threshold adjustments by
+revision interval\]**
+
+The intermediate combined threshold increased by 180%, while the
+intermediate target threshold increased by 166.7%. Among the benchmark
+paths, the ALSI provides the closest fit to both intermediate
+thresholds. The ALSI-implied combined threshold is 5.4% below the R560
+million statutory value, while the corresponding target-firm threshold
+is only 0.6% below the R80 million statutory value.
+
+The result differs for large mergers. The actual large combined and
+target thresholds increased by 88.6% and 90%, respectively. The GDP
+deflator provides the closest fit to both, producing counterfactual
+thresholds 4.3% and 5.1% below the actual values.
+
+Thus, the 2009 revision does not appear to correspond to a common
+adjustment factor across the four thresholds. The intermediate
+thresholds most closely resemble growth in the equity-price benchmark,
+whereas the large-merger thresholds more closely resemble the GDP
+deflator.
+
+This is noteworthy given the Commission’s stated basis for the revision.
+Njisane et al. report that the 2009 thresholds were adjusted with
+reference to nominal GDP and market capitalisation. The descriptive
+results show that these variables help explain the economic context in
+which the revision occurred, but neither reproduces all four statutory
+outcomes most closely.
+
+### 4.2.2 The 2009–2017 Revision
+
+The pattern changes considerably over the following revision period.
+
+The intermediate combined threshold increased by only 7.1%, while the
+target threshold increased by 25%. Both large thresholds remained
+unchanged. Real GDP provides the closest of the six benchmark paths
+across all four statutory values.
+
+For the intermediate combined threshold, the real-GDP-implied value is
+8.9% above the R600 million statutory threshold. For the target
+threshold, the counterfactual lies 6.6% below the actual R100 million
+value. The real-GDP counterfactual exceeds both unchanged large
+thresholds by 16.7%.
+
+The result is broadly consistent with the institutional account of the
+revision. Njisane et al. report that the adjustment implemented in 2017
+was based on changes in real GDP from 2009 to 2016. Nevertheless, Figure
+3(b) also makes clear that even the closest benchmark does not reproduce
+the four statutory values exactly. In particular, the absence of any
+adjustment to the large thresholds implies that those values declined
+relative to every positive-growth benchmark considered.
+
+### 4.2.3 The 2017–2026-to-Date Revision
+
+Figure 3(c) reports the corresponding results for the latest revision
+period. The endpoint is deliberately measured on a **2026-to-date
+basis**, using the latest available observations described in the data
+section.
+
+The intermediate combined threshold increased by 66.7%. JSE market
+capitalisation provides the closest benchmark-implied value, lying
+approximately 4.1% below the actual R1 billion threshold. The
+intermediate target threshold increased by 100%. Here the ALSI provides
+the closest fit, with the implied value approximately 3.7% below the
+actual R200 million threshold.
+
+The large thresholds again display a different pattern. The actual
+combined threshold increased by 43.9% and the target threshold by 47.4%.
+CPI provides the closest fit to both. The CPI-implied large combined
+threshold is approximately 2.9% above the actual R9.5 billion value,
+while the implied target threshold is approximately 0.5% above the
+actual R280 million threshold.
+
+Table 2 summarises these results.
+
+**Table 2. Closest benchmark by threshold and revision interval**
+
+| Revision interval | Intermediate combined | Intermediate target | Large combined | Large target |
+|----|----|----|----|----|
+| 2001–2009 | ALSI (-5.4%) | ALSI (-0.6%) | GDP deflator (-4.3%) | GDP deflator (-5.1%) |
+| 2009–2017 | Real GDP (+8.9%) | Real GDP (-6.6%) | Real GDP (+16.7%) | Real GDP (+16.7%) |
+| 2017–2026-to-date | JSE market capitalisation (-4.1%) | ALSI (-3.7%) | CPI (+2.9%) | CPI (+0.5%) |
+
+*Notes: Values in parentheses report the percentage deviation of the
+benchmark-implied value from the actual statutory threshold. A positive
+value indicates that the benchmark-implied threshold exceeds the actual
+threshold.*
+
+The main result from Table 2 is that there is **no economic benchmark
+that consistently provides the closest fit across periods and threshold
+limbs**. Real GDP provides the most uniform fit in the 2009–2017 period,
+but this pattern does not extend backwards or forwards. The results
+therefore provide little descriptive support for an implicit stable
+indexation rule governing South African merger thresholds.
+
+This finding does not imply that the economic indicators cited by the
+Commission were irrelevant to the adjustment process. Rather, the
+resulting statutory values appear to reflect a more differentiated
+adjustment than would follow from mechanically applying any one of the
+benchmark series.
+
+------------------------------------------------------------------------
+
+## 4.3 Actual and Counterfactual Threshold Paths
+
+The preceding analysis re-anchors the counterfactual calculation at the
+beginning of each statutory revision interval. We now consider a
+stricter counterfactual: what would the threshold paths have looked like
+had South Africa selected a particular economic benchmark in 2001 and
+applied it consistently thereafter?
+
+Figure 4 plots these cumulative benchmark paths against the actual
+thresholds.
+
+**\[Figure 4: Actual thresholds and 2001-anchored counterfactual
+paths\]**
+
+The figure highlights substantial divergence between the actual
+statutory path and several of the mechanical adjustment rules.
+Importantly, the direction of this divergence is not the same for the
+intermediate and large-merger thresholds.
+
+### 4.3.1 Intermediate Thresholds
+
+For the intermediate thresholds, the statutory path initially rises
+sharply. The 2009 values are close to the ALSI-implied path, as noted
+above. Thereafter, however, the actual and benchmark paths diverge
+substantially.
+
+By 2017, several counterfactual rules imply threshold values that differ
+materially from the statutory values. The limited adjustment of the
+intermediate combined threshold between 2009 and 2017 causes it to fall
+relative to most measures of nominal economic activity and prices. The
+intermediate target threshold shows less divergence because its 25%
+statutory increase over the period was larger.
+
+The 2026 revision reverses much of this pattern. The combined threshold
+rises by 66.7%, while the target threshold doubles. Consequently, the
+intermediate thresholds move upwards relative to several
+benchmark-maintenance paths. The target threshold shows the strongest
+movement: its increase is considerably larger than that implied by
+price-based benchmarks and is closest to the growth in the ALSI over the
+latest interval.
+
+The result is therefore not a monotonic widening or narrowing of the
+notification boundary. Rather, the relative position of the statutory
+threshold varies substantially across regimes.
+
+### 4.3.2 Large-Merger Thresholds
+
+The large thresholds show a different cumulative pattern.
+
+The 2001 values remained unchanged from the initial 1999 regime.
+Although both were increased substantially in 2009, they were then held
+constant through 2017. As a result, benchmark paths linked to prices,
+nominal GDP and financial-market measures increasingly exceed the
+statutory large-merger thresholds over this period.
+
+The 2026 revision reduces some of this divergence. In particular, the
+latest increases in the two large thresholds are close to the increase
+in CPI over the 2017–2026-to-date interval. The cumulative 2001-anchored
+paths nevertheless show that this latest adjustment does not undo the
+consequences of earlier periods in which the statutory thresholds grew
+considerably more slowly than some of the economic benchmarks.
+
+Figures 4(a) and 4(b) therefore reinforce the finding that the
+intermediate and large thresholds have followed distinct trajectories. A
+single index applied uniformly to the four 2001 starting values would
+preserve the ratios between those values through time. The actual South
+African regime does not do so. The relative structure of the threshold
+system has itself changed.
+
+### 4.3.3 Interpretation of the Counterfactual Gaps
+
+The gaps between actual and benchmark-implied thresholds have a direct
+screening interpretation. Where an actual threshold lies above its
+counterfactual value, the statutory notification boundary is higher than
+it would have been under that benchmark. Conversely, where the actual
+value lies below the counterfactual, the statutory boundary is lower.
+
+This distinction is consistent with the error-cost framework used in the
+threshold literature. The ICN characterises notification-threshold
+design as balancing the private and administrative costs of capturing
+transactions that are unlikely to raise competition concerns against the
+cost of allowing potentially problematic transactions to escape
+mandatory review. Njisane et al. apply a similar framework to South
+Africa, describing these as Type I and Type II error costs.
+
+The descriptive results suggest that the relative breadth of the South
+African notification screen has changed over time. The limited statutory
+adjustment between 2009 and 2017 caused the thresholds to decline
+relative to most nominal and price benchmarks. In this relative sense,
+the notification screen became broader. The 2026 revision moves in the
+opposite direction at the intermediate boundary, where the statutory
+increases exceed several of the benchmark-maintenance paths.
+
+The result should be interpreted cautiously. The counterfactual gaps do
+not identify policymakers’ preferences. A lower statutory threshold
+relative to an economic benchmark is consistent with maintaining broader
+mandatory coverage, while a higher relative threshold is consistent with
+a narrower screen. Neither establishes why policymakers chose the
+observed values.
+
+This distinction is particularly important because objective financial
+thresholds are imperfect screens for substantive competition concerns.
+The ICN notes that turnover- and asset-based thresholds necessarily
+capture transactions that ultimately raise no competition concern while
+potentially excluding others that may be competitively significant. The
+threshold comparison therefore identifies changes in **screening
+coverage**, not changes in the underlying competitive harm of mergers.
+
+The transaction-level analysis that follows considers whether these
+differences in nominal and relative threshold levels are economically
+consequential. Specifically, it examines whether application of the
+alternative threshold paths materially changes the distribution of
+observed transactions between small, intermediate and large merger
+classifications.
