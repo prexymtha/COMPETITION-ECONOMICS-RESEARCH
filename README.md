@@ -347,7 +347,7 @@ MA<GO>.
     ##   ..   `Attr: Any Stake-Change Type Tagged` = col_logical(),
     ##   ..   `Attr: Formal Offer Process (Tender/Mandatory/Squeeze Out)` = col_logical()
     ##   .. )
-    ##  - attr(*, "problems")=<pointer: 0x000001bf442fdd10>
+    ##  - attr(*, "problems")=<pointer: 0x000001b7c8fd4e40>
 
     ## [1] 633  73
 
@@ -1202,6 +1202,29 @@ print(
     ## 2017→2026 & Large: Target & 190 & 280 & 47.4 & 5–20\% & Above range & 20 & 27.4 & 218.5 & 218.5\\*
     ## \end{longtable}
     ## \endgroup{}
+
+``` r
+q3_table
+```
+
+    ## # A tibble: 12 × 11
+    ##    Interval  Limb             `Start (R'm)` `Actual End (R'm)` `Actual Growth %`
+    ##    <chr>     <chr>                    <dbl>              <dbl>             <dbl>
+    ##  1 2001→2009 Intermediate: C…           200                560             180  
+    ##  2 2001→2009 Intermediate: T…            30                 80             167. 
+    ##  3 2001→2009 Large: Combined           3500               6600              88.6
+    ##  4 2001→2009 Large: Target              100                190              90  
+    ##  5 2009→2017 Intermediate: C…           560                600               7.1
+    ##  6 2009→2017 Intermediate: T…            80                100              25  
+    ##  7 2009→2017 Large: Combined           6600               6600               0  
+    ##  8 2009→2017 Large: Target              190                190               0  
+    ##  9 2017→2026 Intermediate: C…           600               1000              66.7
+    ## 10 2017→2026 Intermediate: T…           100                200             100  
+    ## 11 2017→2026 Large: Combined           6600               9500              43.9
+    ## 12 2017→2026 Large: Target              190                280              47.4
+    ## # ℹ 6 more variables: `Njisane Range` <chr>, Position <chr>,
+    ## #   `Closest Njisane %` <dbl>, `Diff (pp)` <dbl>, `15%T/20%C (R'm)` <dbl>,
+    ## #   `15%T/40%C (R'm)` <dbl>
 
 ``` r
 # ---- 5. ONE graph: actual growth vs Njisane's tested range, faceted by interval ----

@@ -625,6 +625,8 @@ print(
     row_spec(0, bold = TRUE)
 )
 
+q3_table
+
 # ---- 5. ONE graph: actual growth vs Njisane's tested range, faceted by interval ----
 plot_data <- actual_growth %>% left_join(njisane_range, by = "limb_type")
 
