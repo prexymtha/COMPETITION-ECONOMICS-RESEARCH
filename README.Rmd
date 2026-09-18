@@ -637,3 +637,84 @@ g_{s,t}^{B}=\left(\frac{B_t}{B_s}-1\right)\times100.
 \]
 
 For Question 1, \(s=2001\) throughout. For Question 2, \(s\) is reset to the statutory threshold at the beginning of each interval: 2001, 2009 and 2017.
+
+
+
+```{r}
+# ============================================================
+# QUESTION 4: How have the comparator jurisdictions evolved?
+#
+# "What were the initial and current merger-notification
+# thresholds in the United States, European Union and Brazil;
+# how and why have these thresholds changed; what determines
+# their adjustment where an adjustment mechanism exists; and
+# how does the design of each notification regime differ from
+# South Africa's?"
+#
+# World Bank cross-country regression is deliberately excluded
+# from this table -- kept as a separate exercise, since the
+# threshold architectures here are not all comparable on one
+# regression (transaction-value vs worldwide vs domestic
+# turnover), per the note under "The World Bank log graph".
+#
+# Facts below verified independently against primary/authoritative
+# sources (FTC press releases for the US; CADE/Lexology/Law
+# 12,529 sources for Brazil) before entering the dissertation.
+# ============================================================
+
+library(tidyverse)
+library(kableExtra)
+
+comparators <- tribble(
+  ~Jurisdiction, ~`Starting Point`, ~`Current (2026)`, ~Metric, ~`Adjustment Mechanism`, ~`Economic Anchor`, ~Frequency,
+
+  "United States",
+  "2001: transaction > \\$50m (reset from original 1976 \\$15m floor); size-of-person \\$10m/\\$100m; transaction > \\$200m regardless of size-of-person",
+  "Transaction > \\$133.9m; size-of-person \\$26.8m/\\$267.8m; > \\$535.5m irrespective of size-of-person",
+  "Transaction value + party assets/sales",
+  "Automatic statutory indexation",
+  "GNP",
+  "Annual, from FY2005",
+
+  "European Union",
+  "1990: ECU 5bn worldwide combined + ECU 250m Community turnover for each of at least two firms",
+  "\\euro5bn + \\euro250m (main route, unchanged); second (lower, multi-Member-State) route added 1 March 1998",
+  "Turnover (worldwide + Community/Member-State)",
+  "No automatic indexation; legislative review/revision only",
+  "None mechanically specified",
+  "Irregular / legislative",
+
+  "Brazil",
+  "2011 statute (Law 12,529/2011): R\\$400m + R\\$30m local group turnover",
+  "R\\$750m + R\\$75m (set by Interministerial Ordinance 994/2012, unchanged since; a rise to R\\$1bn/R\\$200m was under discussion as of Jan 2025 but not confirmed enacted)",
+  "Local turnover of two economic groups",
+  "Discretionary: CADE recommendation + interministerial ordinance",
+  "No automatic macroeconomic formula",
+  "Irregular; unchanged since 2012",
+
+  "South Africa",
+  "1999: Intermediate R50m + R5m; Large R3.5bn + R100m",
+  "Intermediate R1bn + R200m; Large R9.5bn + R280m",
+  "Local turnover OR assets; combined + target limbs",
+  "Discretionary Minister/Commission determination",
+  "Has varied between revisions (see Q1/Q2)",
+  "Episodic"
+)
+
+print(
+  kbl(comparators, format = "latex", booktabs = TRUE, longtable = TRUE, escape = FALSE,
+      caption = "Comparator merger-notification threshold regimes: United States, European Union, Brazil and South Africa",
+      label = "tab:q4-comparators") %>%
+    kable_styling(latex_options = c("scale_down", "hold_position", "repeat_header"),
+                  font_size = 7) %>%
+    column_spec(1, bold = TRUE, width = "2cm") %>%
+    column_spec(2, width = "3.5cm") %>%
+    column_spec(3, width = "3.5cm") %>%
+    column_spec(4, width = "2.5cm") %>%
+    column_spec(5, width = "2.5cm") %>%
+    column_spec(6, width = "2cm") %>%
+    column_spec(7, width = "1.8cm") %>%
+    row_spec(0, bold = TRUE)
+)
+```
+

@@ -314,7 +314,7 @@ transactions. Dropping them gives 446.*
     ##   ..   `Attr: Any Stake-Change Type Tagged` = col_logical(),
     ##   ..   `Attr: Formal Offer Process (Tender/Mandatory/Squeeze Out)` = col_logical()
     ##   .. )
-    ##  - attr(*, "problems")=<pointer: 0x000001dd390fecd0>
+    ##  - attr(*, "problems")=<pointer: 0x0000018b399fddb0>
 
     ## [1] 633  73
 
