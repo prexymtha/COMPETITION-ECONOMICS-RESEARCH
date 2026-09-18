@@ -347,7 +347,7 @@ MA<GO>.
     ##   ..   `Attr: Any Stake-Change Type Tagged` = col_logical(),
     ##   ..   `Attr: Formal Offer Process (Tender/Mandatory/Squeeze Out)` = col_logical()
     ##   .. )
-    ##  - attr(*, "problems")=<pointer: 0x000002060b2fde00>
+    ##  - attr(*, "problems")=<pointer: 0x000001fe889fdd50>
 
     ## [1] 633  73
 
@@ -505,85 +505,90 @@ ggplot(long, aes(x = 1, y = increment, fill = period)) +
 ggsave("threshold_grayscale.png", width = 16, height = 9, dpi = 150)
 ```
 
-# Question of evolution
+# QUESTION 1: Counterfactual macroeconomic indexation of merger thresholds
 
-# ============================================================
+Had the Competition Commission made an explicit or implicit choice in
+2001 to index the merger notification thresholds to one of the
+macroeconomic benchmarks in our data — the Consumer Price Index (CPI),
+GDP deflator, nominal GDP, real GDP, or market capitalisation — what
+would each threshold have been at the subsequent revision dates?
 
-# Threshold Benchmark Analysis — reads macro data from the file
+Using 2001 as the baseline calibration year, what percentage adjustment
+would each macroeconomic benchmark have implied at the 2009, 2017, and
+2026 revision points, and which benchmark most closely reproduces the
+actual statutory threshold adjustments observed over this period?
 
-# ============================================================
+The 1999 thresholds are treated as the initial statutory thresholds,
+while the 2001 revision is interpreted as an early recalibration
+following the initial implementation of the merger-control regime. For
+this reason, the 1999–2001 adjustment is not treated as evidence of a
+systematic macroeconomic indexation rule.
+
+# QUESTION 1: Which macroeconomic benchmark best characterises the evolution of South Africa’s merger thresholds?
+
+Taking the 2001 merger thresholds as the baseline, what threshold values
+would have resulted at the 2009, 2017, and 2026 revision dates if the
+thresholds had been indexed to (i) the CPI, (ii) the GDP deflator, (iii)
+nominal GDP, (iv) real GDP, or (v) market capitalisation?
+
+For each benchmark, what cumulative percentage adjustment would have
+been implied between successive revision dates, and which benchmark most
+closely tracks the actual statutory threshold adjustments?
+
+The 1999 thresholds are treated as the initial statutory calibration and
+the 2001 revision as an early recalibration of the new merger-control
+regime. Accordingly, the 1999–2001 change is reported descriptively but
+is not used to infer a systematic threshold-adjustment rule.
 
 ``` r
+# ============================================================
+# QUESTION 1: "Had the commission made an implicit or explicit
+# choice to pin the thresholds down to the macroeconomic
+# variables we have in our data in 2001 (given that the 1999
+# were their initial threshold series, the revision shows
+# initial calibration after lessons, so I wouldn't read too
+# much into the 1999-2001 revisions) what would each values
+# have been at the revision points & what percentage growth
+# would they have stipulated, and with commission's current
+# data which macro benchmark predicted that better?"
+# ============================================================
+
 library(readr)
 library(dplyr)
 library(tidyr)
 library(purrr)
-library(writexl)
+library(kableExtra)
 ```
 
-    ## Warning: package 'writexl' was built under R version 4.6.1
-
-``` r
-# ---- Step 1: Load your actual data ----
-madata <- read_csv("data/ma_classification_blended.csv")
-```
-
-    ## Rows: 633 Columns: 73
-    ## ── Column specification ────────────────────────────────────────────────────────
-    ## Delimiter: ","
-    ## chr  (24): Deal Type, Announce Date, Deal Status, Deal Attributes, Deal Desc...
-    ## dbl  (23): Action ID, Announced Premium, Percent Owned, Percent Sought, Targ...
-    ## lgl  (24): Attr: Company Takeover, Attr: Additional Stake Purchase, Attr: Cr...
-    ## date  (2): Regime Start, Regime End
     ## 
-    ## ℹ Use `spec()` to retrieve the full column specification for this data.
-    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+    ## Attaching package: 'kableExtra'
+
+    ## The following object is masked from 'package:dplyr':
+    ## 
+    ##     group_rows
 
 ``` r
-# If your file is genuinely .xlsx rather than .csv, swap the line above for:
-# library(readxl); madata <- read_excel("data/your_file.xlsx")
+# ---- Load data, extract macro series ----
+madata <- read_csv("data/ma_classification_blended.csv", show_col_types = FALSE)
 
-# ---- Step 2: Extract one macro observation per year directly from the file
-# (each deal-row repeats its year's macro figures, so take the first per year) ----
 macro <- madata %>%
   distinct(Year, .keep_all = TRUE) %>%
-  transmute(
-    Year,
-    CPI  = `CPI Index (Dec 2024=100)`,
-    NGDP = `Nominal GDP (R million)`,
-    RGDP = `Real GDP (R million, 2015 prices)`,
-    DEFL = `GDP Deflator (Index, 2015=100)`,
-    MCAP = `Market Capitalisation (R million)`
-  ) %>%
-  arrange(Year)
+  transmute(Year,
+            CPI  = `CPI Index (Dec 2024=100)`,
+            NGDP = `Nominal GDP (R million)`,
+            RGDP = `Real GDP (R million, 2015 prices)`,
+            DEFL = `GDP Deflator (Index, 2015=100)`,
+            MCAP = `Market Capitalisation (R million)`) %>%
+  arrange(Year) %>%
+  filter(!is.na(CPI))  # drops incomplete 2026 row from the file itself
 
-# Sanity check: confirm the years you need are actually present and complete
-macro %>% filter(Year %in% c(2001, 2009, 2017, 2026)) %>% print()
-```
+# ---- 2026-so-far values (verified/supplied separately, not in the file) ----
+# TODO: cite source for each figure (Stats SA / SARB / JSE release + date)
+macro <- macro %>%
+  bind_rows(tibble(Year = 2026, CPI = 105.8, NGDP = 8025000, RGDP = 4720000,
+                    DEFL = 8025000/4720000*100, MCAP = 25090000))
 
-    ## # A tibble: 4 × 6
-    ##    Year   CPI     NGDP     RGDP  DEFL     MCAP
-    ##   <dbl> <dbl>    <dbl>    <dbl> <dbl>    <dbl>
-    ## 1  2001  29.2 1165941. 2903050.  40.2  1770682
-    ## 2  2009  47.0 2794228. 3856572.  72.5  5929063
-    ## 3  2017  71.4 5078190. 4501702. 113.  15467873
-    ## 4  2026  NA        NA       NA   NA         NA
-
-``` r
-# 2026 will likely be NA/incomplete in your file (partial year) — if so, use 2025
-# as the nearest complete-year proxy, same approach as earlier in this analysis:
-if (any(is.na(macro %>% filter(Year == 2026) %>% select(-Year)))) {
-  proxy_2026 <- macro %>% filter(Year == 2025) %>% mutate(Year = 2026)
-  macro <- macro %>% filter(Year != 2026) %>% bind_rows(proxy_2026)
-  message("2026 macro data incomplete in source file \u2014 using 2025 as proxy.")
-}
-```
-
-    ## 2026 macro data incomplete in source file — using 2025 as proxy.
-
-``` r
-# ---- Step 3: Threshold data (still typed by hand — this is legislated,
-# not something that lives as rows in your deal-level data) ----
+# ---- Threshold data (Table 2, legislated figures) ----
 actual <- tribble(
   ~Year, ~IC,   ~IT,  ~LC,   ~LT,
   1999,   50,    5,   3500,  100,
@@ -592,335 +597,478 @@ actual <- tribble(
   2017,   600,   100, 6600,  190,
   2026,   1000,  200, 9500,  280
 )
-
-limb_names <- c(IC = "Intermediate: Combined", IT = "Intermediate: Target",
-                 LC = "Large: Combined",        LT = "Large: Target")
+limb_names  <- c(IC = "Interm: Combined", IT = "Interm: Target",
+                  LC = "Large: Combined",  LT = "Large: Target")
 bench_names <- c(CPI = "CPI", NGDP = "Nominal GDP", RGDP = "Real GDP",
                   DEFL = "GDP Deflator", MCAP = "Market Cap")
 base_year <- 2001
 
-# ---- The rest is unchanged from before — same logic, now fed by real data ----
-
-ratios <- actual %>%
-  transmute(Year,
-            `Large:Interm (Combined)` = round(LC/IC, 1),
-            `Large:Interm (Target)`   = round(LT/IT, 1),
-            `Interm: Combined/Target` = round(IC/IT, 1),
-            `Large: Combined/Target`  = round(LC/LT, 1))
-
-nominal_growth <- actual %>%
-  arrange(Year) %>%
-  pivot_longer(-Year, names_to = "limb_code", values_to = "value") %>%
-  group_by(limb_code) %>%
-  mutate(nominal_growth_pct = (value/lag(value) - 1) * 100) %>%
-  ungroup()
-
+# ---- Build predictions, single base = 2001 ----
 predict_years <- c(2009, 2017, 2026)
 base_macro  <- macro %>% filter(Year == base_year)
 base_thresh <- actual %>% filter(Year == base_year)
 
-benchmark_rows <- map_dfr(predict_years, function(yr) {
+q1_data <- map_dfr(predict_years, function(yr) {
   yr_macro <- macro %>% filter(Year == yr)
   map_dfr(names(limb_names), function(code) {
     actual_val <- actual %>% filter(Year == yr) %>% pull(all_of(code))
     base_val   <- base_thresh %>% pull(all_of(code))
-    preds <- map_dfr(names(bench_names), function(b) {
-      growth_factor <- yr_macro[[b]] / base_macro[[b]]
-      predicted <- base_val * growth_factor
-      tibble(Benchmark = bench_names[[b]], predicted_value = predicted,
-             predicted_growth_pct = (growth_factor - 1) * 100,
-             pct_error = (predicted - actual_val) / actual_val * 100)
+    map_dfr(names(bench_names), function(b) {
+      gf <- yr_macro[[b]] / base_macro[[b]]
+      predicted <- base_val * gf
+      tibble(Year = yr, Limb = limb_names[[code]], Benchmark = bench_names[[b]],
+             `Predicted (R'm)` = round(predicted, 1),
+             `Predicted Growth %` = round((gf - 1) * 100, 1),
+             `Error vs Actual %` = round((predicted - actual_val) / actual_val * 100, 1))
     })
-    best <- preds %>% slice_min(abs(pct_error), n = 1)
-    tibble(Year = yr, Limb = limb_names[[code]], actual_value = actual_val,
-           !!!setNames(as.list(preds$predicted_value), paste0(preds$Benchmark, ": Predicted Value (R'm)")),
-           !!!setNames(as.list(preds$predicted_growth_pct), paste0(preds$Benchmark, ": Predicted Growth % (since 2001)")),
-           `Best-Fit Benchmark` = best$Benchmark, `Best-Fit Error %` = round(best$pct_error, 1))
   })
 })
 
-pred_cols <- setdiff(names(benchmark_rows), c("Year","Limb","actual_value"))
+# ---- ONE INVERTED (metrics-as-rows) TABLE PER YEAR, sized to fit a page ----
+for (yr in predict_years) {
 
-base_rows <- map_dfr(c(1999, 2001), function(yr) {
-  map_dfr(names(limb_names), function(code) {
-    val <- actual %>% filter(Year == yr) %>% pull(all_of(code))
-    row <- as.list(rep("-", length(pred_cols))) %>% setNames(pred_cols)
-    row$Year <- yr; row$Limb <- limb_names[[code]]; row$actual_value <- val
-    as_tibble(row)
-  })
-})
-base_rows <- base_rows %>%
-  left_join(nominal_growth %>% filter(Year == 2001) %>%
-              transmute(Limb = limb_names[limb_code], nom = round(nominal_growth_pct,1)), by = "Limb") %>%
-  mutate(`Nominal Growth % (vs prior revision)` = if_else(Year == 2001, as.character(nom), "-"),
-         `Best-Fit Benchmark` = if_else(Year == 2001, "2001 = base year (nothing to predict)", "-")) %>%
-  select(-nom)
+  yr_block <- q1_data %>% filter(Year == yr)
 
-# THE FIX — coerce benchmark_rows' numeric prediction columns to character
-# so they match base_rows' "-" placeholders before bind_rows() stacks them
-benchmark_rows <- benchmark_rows %>%
-  mutate(across(all_of(pred_cols), as.character))
+  # transpose: rows = Benchmark x metric, columns = Limb
+  wide <- yr_block %>%
+    pivot_longer(c(`Predicted (R'm)`, `Predicted Growth %`, `Error vs Actual %`),
+                 names_to = "Metric", values_to = "value") %>%
+    unite("row_label", Benchmark, Metric, sep = " \u2014 ") %>%
+    pivot_wider(id_cols = row_label, names_from = Limb, values_from = value)
 
-benchmark_rows <- benchmark_rows %>%
-  left_join(nominal_growth %>% filter(Year %in% predict_years) %>%
-              transmute(Year, Limb = limb_names[limb_code], nom = round(nominal_growth_pct,1)),
-            by = c("Year","Limb")) %>%
-  rename(`Actual Value (R'm)` = actual_value) %>%
-  mutate(`Nominal Growth % (vs prior revision)` = as.character(nom)) %>%
-  select(-nom)
-base_rows <- base_rows %>% rename(`Actual Value (R'm)` = actual_value)
+  actual_row <- actual %>% filter(Year == yr) %>%
+    pivot_longer(-Year, names_to = "code", values_to = "val") %>%
+    mutate(Limb = limb_names[code]) %>%
+    select(Limb, val) %>%
+    pivot_wider(names_from = Limb, values_from = val) %>%
+    mutate(row_label = "Actual Value (R'm)", .before = 1)
 
-master <- bind_rows(base_rows, benchmark_rows) %>%
-  left_join(ratios, by = "Year") %>%
-  arrange(Year, Limb)
+  final_tbl <- bind_rows(actual_row, wide)
 
-print(master, n = Inf, width = Inf)
+  print(
+    kbl(final_tbl, format = "latex", booktabs = TRUE, longtable = FALSE,
+        col.names = c("", names(final_tbl)[-1]),
+        caption = paste0("Threshold values predicted under each macro benchmark vs actual, ", yr,
+                          " (single base = 2001)"),
+        label = paste0("tab:q1-", yr)) %>%
+      kable_styling(latex_options = c("scale_down", "hold_position"),
+                    font_size = 8) %>%
+      column_spec(1, width = "5cm") %>%
+      row_spec(0, bold = TRUE)
+  )
+}
 ```
 
-    ## # A tibble: 20 × 20
-    ##    `CPI: Predicted Value (R'm)` `Nominal GDP: Predicted Value (R'm)`
-    ##    <chr>                        <chr>                               
-    ##  1 -                            -                                   
-    ##  2 -                            -                                   
-    ##  3 -                            -                                   
-    ##  4 -                            -                                   
-    ##  5 -                            -                                   
-    ##  6 -                            -                                   
-    ##  7 -                            -                                   
-    ##  8 -                            -                                   
-    ##  9 322.584333905089             479.308877313304                    
-    ## 10 48.3876500857633             71.8963315969956                    
-    ## 11 5645.22584333906             8387.90535298282                    
-    ## 12 161.292166952544             239.654438656652                    
-    ## 13 490.165809033734             871.088955989696                    
-    ## 14 73.5248713550601             130.663343398454                    
-    ## 15 8577.90165809034             15244.0567298197                    
-    ## 16 245.082904516867             435.544477994848                    
-    ## 17 703.201829616926             1310.83748177223                    
-    ## 18 105.480274442539             196.625622265834                    
-    ## 19 12306.0320182962             22939.655931014                     
-    ## 20 351.600914808463             655.418740886114                    
-    ##    `Real GDP: Predicted Value (R'm)` `GDP Deflator: Predicted Value (R'm)`
-    ##    <chr>                             <chr>                                
-    ##  1 -                                 -                                    
-    ##  2 -                                 -                                    
-    ##  3 -                                 -                                    
-    ##  4 -                                 -                                    
-    ##  5 -                                 -                                    
-    ##  6 -                                 -                                    
-    ##  7 -                                 -                                    
-    ##  8 -                                 -                                    
-    ##  9 265.691101719072                  360.801603224259                     
-    ## 10 39.8536652578607                  54.1202404836389                     
-    ## 11 4649.59428008375                  6314.02805642453                     
-    ## 12 132.845550859536                  180.40080161213                      
-    ## 13 310.136055206775                  561.746331240929                     
-    ## 14 46.5204082810162                  84.2619496861394                     
-    ## 15 5427.38096611856                  9830.56079671626                     
-    ## 16 155.068027603387                  280.873165620465                     
-    ## 17 324.941107618041                  806.815420419553                     
-    ## 18 48.7411661427061                  121.022313062933                     
-    ## 19 5686.46938331572                  14119.2698573422                     
-    ## 20 162.47055380902                   403.407710209777                     
-    ##    `Market Cap: Predicted Value (R'm)` `CPI: Predicted Growth % (since 2001)`
-    ##    <chr>                               <chr>                                 
-    ##  1 -                                   -                                     
-    ##  2 -                                   -                                     
-    ##  3 -                                   -                                     
-    ##  4 -                                   -                                     
-    ##  5 -                                   -                                     
-    ##  6 -                                   -                                     
-    ##  7 -                                   -                                     
-    ##  8 -                                   -                                     
-    ##  9 669.692581728396                    61.2921669525444                      
-    ## 10 100.453887259259                    61.2921669525444                      
-    ## 11 11719.6201802469                    61.2921669525444                      
-    ## 12 334.846290864198                    61.2921669525444                      
-    ## 13 1747.1090800042                     145.082904516867                      
-    ## 14 262.06636200063                     145.082904516867                      
-    ## 15 30574.4089000735                    145.082904516867                      
-    ## 16 873.554540002101                    145.082904516867                      
-    ## 17 2732.00405267575                    251.600914808463                      
-    ## 18 409.800607901362                    251.600914808463                      
-    ## 19 47810.0709218256                    251.600914808463                      
-    ## 20 1366.00202633787                    251.600914808463                      
-    ##    `Nominal GDP: Predicted Growth % (since 2001)`
-    ##    <chr>                                         
-    ##  1 -                                             
-    ##  2 -                                             
-    ##  3 -                                             
-    ##  4 -                                             
-    ##  5 -                                             
-    ##  6 -                                             
-    ##  7 -                                             
-    ##  8 -                                             
-    ##  9 139.654438656652                              
-    ## 10 139.654438656652                              
-    ## 11 139.654438656652                              
-    ## 12 139.654438656652                              
-    ## 13 335.544477994848                              
-    ## 14 335.544477994848                              
-    ## 15 335.544477994848                              
-    ## 16 335.544477994848                              
-    ## 17 555.418740886114                              
-    ## 18 555.418740886114                              
-    ## 19 555.418740886114                              
-    ## 20 555.418740886114                              
-    ##    `Real GDP: Predicted Growth % (since 2001)`
-    ##    <chr>                                      
-    ##  1 -                                          
-    ##  2 -                                          
-    ##  3 -                                          
-    ##  4 -                                          
-    ##  5 -                                          
-    ##  6 -                                          
-    ##  7 -                                          
-    ##  8 -                                          
-    ##  9 32.8455508595358                           
-    ## 10 32.8455508595358                           
-    ## 11 32.8455508595358                           
-    ## 12 32.8455508595358                           
-    ## 13 55.0680276033874                           
-    ## 14 55.0680276033874                           
-    ## 15 55.0680276033874                           
-    ## 16 55.0680276033874                           
-    ## 17 62.4705538090205                           
-    ## 18 62.4705538090205                           
-    ## 19 62.4705538090205                           
-    ## 20 62.4705538090205                           
-    ##    `GDP Deflator: Predicted Growth % (since 2001)`
-    ##    <chr>                                          
-    ##  1 -                                              
-    ##  2 -                                              
-    ##  3 -                                              
-    ##  4 -                                              
-    ##  5 -                                              
-    ##  6 -                                              
-    ##  7 -                                              
-    ##  8 -                                              
-    ##  9 80.4008016121295                               
-    ## 10 80.4008016121295                               
-    ## 11 80.4008016121295                               
-    ## 12 80.4008016121295                               
-    ## 13 180.873165620465                               
-    ## 14 180.873165620465                               
-    ## 15 180.873165620465                               
-    ## 16 180.873165620465                               
-    ## 17 303.407710209777                               
-    ## 18 303.407710209777                               
-    ## 19 303.407710209777                               
-    ## 20 303.407710209777                               
-    ##    `Market Cap: Predicted Growth % (since 2001)`
-    ##    <chr>                                        
-    ##  1 -                                            
-    ##  2 -                                            
-    ##  3 -                                            
-    ##  4 -                                            
-    ##  5 -                                            
-    ##  6 -                                            
-    ##  7 -                                            
-    ##  8 -                                            
-    ##  9 234.846290864198                             
-    ## 10 234.846290864198                             
-    ## 11 234.846290864198                             
-    ## 12 234.846290864198                             
-    ## 13 773.554540002101                             
-    ## 14 773.554540002101                             
-    ## 15 773.554540002101                             
-    ## 16 773.554540002101                             
-    ## 17 1266.00202633787                             
-    ## 18 1266.00202633787                             
-    ## 19 1266.00202633787                             
-    ## 20 1266.00202633787                             
-    ##    `Best-Fit Benchmark`                  `Best-Fit Error %`  Year
-    ##    <chr>                                 <chr>              <dbl>
-    ##  1 -                                     -                   1999
-    ##  2 -                                     -                   1999
-    ##  3 -                                     -                   1999
-    ##  4 -                                     -                   1999
-    ##  5 2001 = base year (nothing to predict) -                   2001
-    ##  6 2001 = base year (nothing to predict) -                   2001
-    ##  7 2001 = base year (nothing to predict) -                   2001
-    ##  8 2001 = base year (nothing to predict) -                   2001
-    ##  9 Nominal GDP                           -14.4               2009
-    ## 10 Nominal GDP                           -10.1               2009
-    ## 11 GDP Deflator                          -4.3                2009
-    ## 12 GDP Deflator                          -5.1                2009
-    ## 13 GDP Deflator                          -6.4                2017
-    ## 14 GDP Deflator                          -15.7               2017
-    ## 15 Real GDP                              -17.8               2017
-    ## 16 Real GDP                              -18.4               2017
-    ## 17 GDP Deflator                          -19.3               2026
-    ## 18 Nominal GDP                           -1.7                2026
-    ## 19 CPI                                   29.5                2026
-    ## 20 CPI                                   25.6                2026
-    ##    Limb                   `Actual Value (R'm)`
-    ##    <chr>                                 <dbl>
-    ##  1 Intermediate: Combined                   50
-    ##  2 Intermediate: Target                      5
-    ##  3 Large: Combined                        3500
-    ##  4 Large: Target                           100
-    ##  5 Intermediate: Combined                  200
-    ##  6 Intermediate: Target                     30
-    ##  7 Large: Combined                        3500
-    ##  8 Large: Target                           100
-    ##  9 Intermediate: Combined                  560
-    ## 10 Intermediate: Target                     80
-    ## 11 Large: Combined                        6600
-    ## 12 Large: Target                           190
-    ## 13 Intermediate: Combined                  600
-    ## 14 Intermediate: Target                    100
-    ## 15 Large: Combined                        6600
-    ## 16 Large: Target                           190
-    ## 17 Intermediate: Combined                 1000
-    ## 18 Intermediate: Target                    200
-    ## 19 Large: Combined                        9500
-    ## 20 Large: Target                           280
-    ##    `Nominal Growth % (vs prior revision)` `Large:Interm (Combined)`
-    ##    <chr>                                                      <dbl>
-    ##  1 -                                                           70  
-    ##  2 -                                                           70  
-    ##  3 -                                                           70  
-    ##  4 -                                                           70  
-    ##  5 300                                                         17.5
-    ##  6 500                                                         17.5
-    ##  7 0                                                           17.5
-    ##  8 0                                                           17.5
-    ##  9 180                                                         11.8
-    ## 10 166.7                                                       11.8
-    ## 11 88.6                                                        11.8
-    ## 12 90                                                          11.8
-    ## 13 7.1                                                         11  
-    ## 14 25                                                          11  
-    ## 15 0                                                           11  
-    ## 16 0                                                           11  
-    ## 17 66.7                                                         9.5
-    ## 18 100                                                          9.5
-    ## 19 43.9                                                         9.5
-    ## 20 47.4                                                         9.5
-    ##    `Large:Interm (Target)` `Interm: Combined/Target` `Large: Combined/Target`
-    ##                      <dbl>                     <dbl>                    <dbl>
-    ##  1                    20                        10                       35  
-    ##  2                    20                        10                       35  
-    ##  3                    20                        10                       35  
-    ##  4                    20                        10                       35  
-    ##  5                     3.3                       6.7                     35  
-    ##  6                     3.3                       6.7                     35  
-    ##  7                     3.3                       6.7                     35  
-    ##  8                     3.3                       6.7                     35  
-    ##  9                     2.4                       7                       34.7
-    ## 10                     2.4                       7                       34.7
-    ## 11                     2.4                       7                       34.7
-    ## 12                     2.4                       7                       34.7
-    ## 13                     1.9                       6                       34.7
-    ## 14                     1.9                       6                       34.7
-    ## 15                     1.9                       6                       34.7
-    ## 16                     1.9                       6                       34.7
-    ## 17                     1.4                       5                       33.9
-    ## 18                     1.4                       5                       33.9
-    ## 19                     1.4                       5                       33.9
-    ## 20                     1.4                       5                       33.9
+    ## \begin{table}[!h]
+    ## \centering
+    ## \caption{\label{tab:tab:q1-2009}Threshold values predicted under each macro benchmark vs actual, 2009 (single base = 2001)}
+    ## \centering
+    ## \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{
+    ## \fontsize{8}{10}\selectfont
+    ## \begin{tabular}[t]{>{\raggedright\arraybackslash}p{5cm}rrrr}
+    ## \toprule
+    ## \textbf{} & \textbf{Interm: Combined} & \textbf{Interm: Target} & \textbf{Large: Combined} & \textbf{Large: Target}\\
+    ## \midrule
+    ## Actual Value (R'm) & 560.0 & 80.0 & 6600.0 & 190.0\\
+    ## CPI — Predicted (R'm) & 322.6 & 48.4 & 5645.2 & 161.3\\
+    ## CPI — Predicted Growth \% & 61.3 & 61.3 & 61.3 & 61.3\\
+    ## CPI — Error vs Actual \% & -42.4 & -39.5 & -14.5 & -15.1\\
+    ## Nominal GDP — Predicted (R'm) & 479.3 & 71.9 & 8387.9 & 239.7\\
+    ## \addlinespace
+    ## Nominal GDP — Predicted Growth \% & 139.7 & 139.7 & 139.7 & 139.7\\
+    ## Nominal GDP — Error vs Actual \% & -14.4 & -10.1 & 27.1 & 26.1\\
+    ## Real GDP — Predicted (R'm) & 265.7 & 39.9 & 4649.6 & 132.8\\
+    ## Real GDP — Predicted Growth \% & 32.8 & 32.8 & 32.8 & 32.8\\
+    ## Real GDP — Error vs Actual \% & -52.6 & -50.2 & -29.6 & -30.1\\
+    ## \addlinespace
+    ## GDP Deflator — Predicted (R'm) & 360.8 & 54.1 & 6314.0 & 180.4\\
+    ## GDP Deflator — Predicted Growth \% & 80.4 & 80.4 & 80.4 & 80.4\\
+    ## GDP Deflator — Error vs Actual \% & -35.6 & -32.3 & -4.3 & -5.1\\
+    ## Market Cap — Predicted (R'm) & 669.7 & 100.5 & 11719.6 & 334.8\\
+    ## Market Cap — Predicted Growth \% & 234.8 & 234.8 & 234.8 & 234.8\\
+    ## \addlinespace
+    ## Market Cap — Error vs Actual \% & 19.6 & 25.6 & 77.6 & 76.2\\
+    ## \bottomrule
+    ## \end{tabular}}
+    ## \end{table}
+    ## \begin{table}[!h]
+    ## \centering
+    ## \caption{\label{tab:tab:q1-2017}Threshold values predicted under each macro benchmark vs actual, 2017 (single base = 2001)}
+    ## \centering
+    ## \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{
+    ## \fontsize{8}{10}\selectfont
+    ## \begin{tabular}[t]{>{\raggedright\arraybackslash}p{5cm}rrrr}
+    ## \toprule
+    ## \textbf{} & \textbf{Interm: Combined} & \textbf{Interm: Target} & \textbf{Large: Combined} & \textbf{Large: Target}\\
+    ## \midrule
+    ## Actual Value (R'm) & 600.0 & 100.0 & 6600.0 & 190.0\\
+    ## CPI — Predicted (R'm) & 490.2 & 73.5 & 8577.9 & 245.1\\
+    ## CPI — Predicted Growth \% & 145.1 & 145.1 & 145.1 & 145.1\\
+    ## CPI — Error vs Actual \% & -18.3 & -26.5 & 30.0 & 29.0\\
+    ## Nominal GDP — Predicted (R'm) & 871.1 & 130.7 & 15244.1 & 435.5\\
+    ## \addlinespace
+    ## Nominal GDP — Predicted Growth \% & 335.5 & 335.5 & 335.5 & 335.5\\
+    ## Nominal GDP — Error vs Actual \% & 45.2 & 30.7 & 131.0 & 129.2\\
+    ## Real GDP — Predicted (R'm) & 310.1 & 46.5 & 5427.4 & 155.1\\
+    ## Real GDP — Predicted Growth \% & 55.1 & 55.1 & 55.1 & 55.1\\
+    ## Real GDP — Error vs Actual \% & -48.3 & -53.5 & -17.8 & -18.4\\
+    ## \addlinespace
+    ## GDP Deflator — Predicted (R'm) & 561.7 & 84.3 & 9830.6 & 280.9\\
+    ## GDP Deflator — Predicted Growth \% & 180.9 & 180.9 & 180.9 & 180.9\\
+    ## GDP Deflator — Error vs Actual \% & -6.4 & -15.7 & 48.9 & 47.8\\
+    ## Market Cap — Predicted (R'm) & 1747.1 & 262.1 & 30574.4 & 873.6\\
+    ## Market Cap — Predicted Growth \% & 773.6 & 773.6 & 773.6 & 773.6\\
+    ## \addlinespace
+    ## Market Cap — Error vs Actual \% & 191.2 & 162.1 & 363.2 & 359.8\\
+    ## \bottomrule
+    ## \end{tabular}}
+    ## \end{table}
+    ## \begin{table}[!h]
+    ## \centering
+    ## \caption{\label{tab:tab:q1-2026}Threshold values predicted under each macro benchmark vs actual, 2026 (single base = 2001)}
+    ## \centering
+    ## \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{
+    ## \fontsize{8}{10}\selectfont
+    ## \begin{tabular}[t]{>{\raggedright\arraybackslash}p{5cm}rrrr}
+    ## \toprule
+    ## \textbf{} & \textbf{Interm: Combined} & \textbf{Interm: Target} & \textbf{Large: Combined} & \textbf{Large: Target}\\
+    ## \midrule
+    ## Actual Value (R'm) & 1000.0 & 200.0 & 9500.0 & 280.0\\
+    ## CPI — Predicted (R'm) & 725.9 & 108.9 & 12703.3 & 363.0\\
+    ## CPI — Predicted Growth \% & 263.0 & 263.0 & 263.0 & 263.0\\
+    ## CPI — Error vs Actual \% & -27.4 & -45.6 & 33.7 & 29.6\\
+    ## Nominal GDP — Predicted (R'm) & 1376.6 & 206.5 & 24090.0 & 688.3\\
+    ## \addlinespace
+    ## Nominal GDP — Predicted Growth \% & 588.3 & 588.3 & 588.3 & 588.3\\
+    ## Nominal GDP — Error vs Actual \% & 37.7 & 3.2 & 153.6 & 145.8\\
+    ## Real GDP — Predicted (R'm) & 325.2 & 48.8 & 5690.6 & 162.6\\
+    ## Real GDP — Predicted Growth \% & 62.6 & 62.6 & 62.6 & 62.6\\
+    ## Real GDP — Error vs Actual \% & -67.5 & -75.6 & -40.1 & -41.9\\
+    ## \addlinespace
+    ## GDP Deflator — Predicted (R'm) & 846.7 & 127.0 & 14816.6 & 423.3\\
+    ## GDP Deflator — Predicted Growth \% & 323.3 & 323.3 & 323.3 & 323.3\\
+    ## GDP Deflator — Error vs Actual \% & -15.3 & -36.5 & 56.0 & 51.2\\
+    ## Market Cap — Predicted (R'm) & 2833.9 & 425.1 & 49593.9 & 1417.0\\
+    ## Market Cap — Predicted Growth \% & 1317.0 & 1317.0 & 1317.0 & 1317.0\\
+    ## \addlinespace
+    ## Market Cap — Error vs Actual \% & 183.4 & 112.5 & 422.0 & 406.1\\
+    ## \bottomrule
+    ## \end{tabular}}
+    ## \end{table}
 
 ``` r
-write_xlsx(master, "threshold_benchmark_analysis.xlsx")
+# ============================================================
+# QUESTION 2: "Had this choice been made within interval, that
+# is reanchoring to 2001, 2009, 2017, 2026, what would have
+# this implied, given the commission's reports states different
+# reasons at each interval? Just verify the macro benchmark
+# data because some of them are already indexed to 2024 etc
+# (handle that)."
+# ============================================================
+# Note: base-year indexing is handled automatically here because
+# every comparison below uses a ratio of the index at two points
+# in time — the arbitrary base year (Dec 2024 for CPI, 2015 for
+# the GDP Deflator) cancels out algebraically in a ratio and
+# never needs separate adjustment.
+# 1999-2001 is EXCLUDED per the framing above: it's the initial
+# post-enactment calibration, not a benchmark-driven revision.
+
+intervals <- list(c(2001, 2009), c(2009, 2017), c(2017, 2026))
+
+q2_data <- map_dfr(intervals, function(iv) {
+  start_yr <- iv[1]; end_yr <- iv[2]
+  start_macro <- macro %>% filter(Year == start_yr)
+  end_macro   <- macro %>% filter(Year == end_yr)
+  start_thresh <- actual %>% filter(Year == start_yr)
+  end_thresh   <- actual %>% filter(Year == end_yr)
+
+  map_dfr(names(limb_names), function(code) {
+    a_start <- start_thresh %>% pull(all_of(code))
+    a_end   <- end_thresh %>% pull(all_of(code))
+    map_dfr(names(bench_names), function(b) {
+      gf <- end_macro[[b]] / start_macro[[b]]
+      implied <- a_start * gf
+      tibble(Interval = paste0(start_yr, "\u2192", end_yr), Limb = limb_names[[code]],
+             Benchmark = bench_names[[b]],
+             `Implied (R'm)` = round(implied, 1),
+             `Implied Growth %` = round((gf - 1) * 100, 1),
+             `Error vs Actual %` = round((implied - a_end) / a_end * 100, 1))
+    })
+  })
+})
+
+# ---- ONE INVERTED TABLE PER INTERVAL ----
+for (iv in intervals) {
+  label <- paste0(iv[1], "\u2192", iv[2])
+  iv_block <- q2_data %>% filter(Interval == label)
+
+  wide <- iv_block %>%
+    pivot_longer(c(`Implied (R'm)`, `Implied Growth %`, `Error vs Actual %`),
+                 names_to = "Metric", values_to = "value") %>%
+    unite("row_label", Benchmark, Metric, sep = " \u2014 ") %>%
+    pivot_wider(id_cols = row_label, names_from = Limb, values_from = value)
+
+  actual_rows <- bind_rows(
+    actual %>% filter(Year == iv[1]) %>%
+      pivot_longer(-Year, names_to="code", values_to="val") %>%
+      mutate(Limb=limb_names[code]) %>% select(Limb,val) %>%
+      pivot_wider(names_from=Limb, values_from=val) %>%
+      mutate(row_label = paste0("Actual Start (", iv[1], ", R'm)"), .before=1),
+    actual %>% filter(Year == iv[2]) %>%
+      pivot_longer(-Year, names_to="code", values_to="val") %>%
+      mutate(Limb=limb_names[code]) %>% select(Limb,val) %>%
+      pivot_wider(names_from=Limb, values_from=val) %>%
+      mutate(row_label = paste0("Actual End (", iv[2], ", R'm)"), .before=1)
+  )
+
+  final_tbl <- bind_rows(actual_rows, wide)
+
+  print(
+    kbl(final_tbl, format = "latex", booktabs = TRUE,
+        col.names = c("", names(final_tbl)[-1]),
+        caption = paste0("Threshold growth reanchored per interval, ", label,
+                          " \u2014 which macro benchmark implied best fit"),
+        label = paste0("tab:q2-", gsub("\u2192","-",label))) %>%
+      kable_styling(latex_options = c("scale_down", "hold_position"),
+                    font_size = 8) %>%
+      column_spec(1, width = "5cm") %>%
+      row_spec(0, bold = TRUE)
+  )
+}
 ```
+
+    ## \begin{table}[!h]
+    ## \centering
+    ## \caption{\label{tab:tab:q2-2001-2009}Threshold growth reanchored per interval, 2001→2009 — which macro benchmark implied best fit}
+    ## \centering
+    ## \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{
+    ## \fontsize{8}{10}\selectfont
+    ## \begin{tabular}[t]{>{\raggedright\arraybackslash}p{5cm}rrrr}
+    ## \toprule
+    ## \textbf{} & \textbf{Interm: Combined} & \textbf{Interm: Target} & \textbf{Large: Combined} & \textbf{Large: Target}\\
+    ## \midrule
+    ## Actual Start (2001, R'm) & 200.0 & 30.0 & 3500.0 & 100.0\\
+    ## Actual End (2009, R'm) & 560.0 & 80.0 & 6600.0 & 190.0\\
+    ## CPI — Implied (R'm) & 322.6 & 48.4 & 5645.2 & 161.3\\
+    ## CPI — Implied Growth \% & 61.3 & 61.3 & 61.3 & 61.3\\
+    ## CPI — Error vs Actual \% & -42.4 & -39.5 & -14.5 & -15.1\\
+    ## \addlinespace
+    ## Nominal GDP — Implied (R'm) & 479.3 & 71.9 & 8387.9 & 239.7\\
+    ## Nominal GDP — Implied Growth \% & 139.7 & 139.7 & 139.7 & 139.7\\
+    ## Nominal GDP — Error vs Actual \% & -14.4 & -10.1 & 27.1 & 26.1\\
+    ## Real GDP — Implied (R'm) & 265.7 & 39.9 & 4649.6 & 132.8\\
+    ## Real GDP — Implied Growth \% & 32.8 & 32.8 & 32.8 & 32.8\\
+    ## \addlinespace
+    ## Real GDP — Error vs Actual \% & -52.6 & -50.2 & -29.6 & -30.1\\
+    ## GDP Deflator — Implied (R'm) & 360.8 & 54.1 & 6314.0 & 180.4\\
+    ## GDP Deflator — Implied Growth \% & 80.4 & 80.4 & 80.4 & 80.4\\
+    ## GDP Deflator — Error vs Actual \% & -35.6 & -32.3 & -4.3 & -5.1\\
+    ## Market Cap — Implied (R'm) & 669.7 & 100.5 & 11719.6 & 334.8\\
+    ## \addlinespace
+    ## Market Cap — Implied Growth \% & 234.8 & 234.8 & 234.8 & 234.8\\
+    ## Market Cap — Error vs Actual \% & 19.6 & 25.6 & 77.6 & 76.2\\
+    ## \bottomrule
+    ## \end{tabular}}
+    ## \end{table}
+    ## \begin{table}[!h]
+    ## \centering
+    ## \caption{\label{tab:tab:q2-2009-2017}Threshold growth reanchored per interval, 2009→2017 — which macro benchmark implied best fit}
+    ## \centering
+    ## \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{
+    ## \fontsize{8}{10}\selectfont
+    ## \begin{tabular}[t]{>{\raggedright\arraybackslash}p{5cm}rrrr}
+    ## \toprule
+    ## \textbf{} & \textbf{Interm: Combined} & \textbf{Interm: Target} & \textbf{Large: Combined} & \textbf{Large: Target}\\
+    ## \midrule
+    ## Actual Start (2009, R'm) & 560.0 & 80.0 & 6600.0 & 190.0\\
+    ## Actual End (2017, R'm) & 600.0 & 100.0 & 6600.0 & 190.0\\
+    ## CPI — Implied (R'm) & 850.9 & 121.6 & 10028.7 & 288.7\\
+    ## CPI — Implied Growth \% & 51.9 & 51.9 & 51.9 & 51.9\\
+    ## CPI — Error vs Actual \% & 41.8 & 21.6 & 51.9 & 51.9\\
+    ## \addlinespace
+    ## Nominal GDP — Implied (R'm) & 1017.7 & 145.4 & 11994.7 & 345.3\\
+    ## Nominal GDP — Implied Growth \% & 81.7 & 81.7 & 81.7 & 81.7\\
+    ## Nominal GDP — Error vs Actual \% & 69.6 & 45.4 & 81.7 & 81.7\\
+    ## Real GDP — Implied (R'm) & 653.7 & 93.4 & 7704.1 & 221.8\\
+    ## Real GDP — Implied Growth \% & 16.7 & 16.7 & 16.7 & 16.7\\
+    ## \addlinespace
+    ## Real GDP — Error vs Actual \% & 8.9 & -6.6 & 16.7 & 16.7\\
+    ## GDP Deflator — Implied (R'm) & 871.9 & 124.6 & 10275.8 & 295.8\\
+    ## GDP Deflator — Implied Growth \% & 55.7 & 55.7 & 55.7 & 55.7\\
+    ## GDP Deflator — Error vs Actual \% & 45.3 & 24.6 & 55.7 & 55.7\\
+    ## Market Cap — Implied (R'm) & 1460.9 & 208.7 & 17218.2 & 495.7\\
+    ## \addlinespace
+    ## Market Cap — Implied Growth \% & 160.9 & 160.9 & 160.9 & 160.9\\
+    ## Market Cap — Error vs Actual \% & 143.5 & 108.7 & 160.9 & 160.9\\
+    ## \bottomrule
+    ## \end{tabular}}
+    ## \end{table}
+    ## \begin{table}[!h]
+    ## \centering
+    ## \caption{\label{tab:tab:q2-2017-2026}Threshold growth reanchored per interval, 2017→2026 — which macro benchmark implied best fit}
+    ## \centering
+    ## \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{
+    ## \fontsize{8}{10}\selectfont
+    ## \begin{tabular}[t]{>{\raggedright\arraybackslash}p{5cm}rrrr}
+    ## \toprule
+    ## \textbf{} & \textbf{Interm: Combined} & \textbf{Interm: Target} & \textbf{Large: Combined} & \textbf{Large: Target}\\
+    ## \midrule
+    ## Actual Start (2017, R'm) & 600.0 & 100.0 & 6600.0 & 190.0\\
+    ## Actual End (2026, R'm) & 1000.0 & 200.0 & 9500.0 & 280.0\\
+    ## CPI — Implied (R'm) & 888.6 & 148.1 & 9774.1 & 281.4\\
+    ## CPI — Implied Growth \% & 48.1 & 48.1 & 48.1 & 48.1\\
+    ## CPI — Error vs Actual \% & -11.1 & -26.0 & 2.9 & 0.5\\
+    ## \addlinespace
+    ## Nominal GDP — Implied (R'm) & 948.2 & 158.0 & 10429.9 & 300.3\\
+    ## Nominal GDP — Implied Growth \% & 58.0 & 58.0 & 58.0 & 58.0\\
+    ## Nominal GDP — Error vs Actual \% & -5.2 & -21.0 & 9.8 & 7.2\\
+    ## Real GDP — Implied (R'm) & 629.1 & 104.8 & 6920.0 & 199.2\\
+    ## Real GDP — Implied Growth \% & 4.8 & 4.8 & 4.8 & 4.8\\
+    ## \addlinespace
+    ## Real GDP — Error vs Actual \% & -37.1 & -47.6 & -27.2 & -28.9\\
+    ## GDP Deflator — Implied (R'm) & 904.3 & 150.7 & 9947.5 & 286.4\\
+    ## GDP Deflator — Implied Growth \% & 50.7 & 50.7 & 50.7 & 50.7\\
+    ## GDP Deflator — Error vs Actual \% & -9.6 & -24.6 & 4.7 & 2.3\\
+    ## Market Cap — Implied (R'm) & 973.2 & 162.2 & 10705.7 & 308.2\\
+    ## \addlinespace
+    ## Market Cap — Implied Growth \% & 62.2 & 62.2 & 62.2 & 62.2\\
+    ## Market Cap — Error vs Actual \% & -2.7 & -18.9 & 12.7 & 10.1\\
+    ## \bottomrule
+    ## \end{tabular}}
+    ## \end{table}
+
+## Research questions and empirical approach
+
+The empirical analysis asks how South Africa’s merger notification
+thresholds have evolved, whether their adjustment can be rationalised by
+movements in observable measures of the economy, and how South Africa’s
+approach compares with alternative methods of setting merger thresholds.
+
+### Question 1: What if the Commission had chosen a macroeconomic benchmark in 2001?
+
+Had the Competition Commission chosen in 2001 to anchor the merger
+notification thresholds to a macroeconomic benchmark, what would each of
+the four nominal thresholds values have been at the subsequent revision
+points in 2009, 2017 and 2026?
+
+The benchmarks considered are the Consumer Price Index (CPI), GDP
+deflator, nominal GDP, real GDP and JSE market capitalisation. For each
+benchmark, I calculate the percentage growth between 2001 and each
+subsequent revision date and use this growth to construct the
+corresponding counterfactual intermediate combined, intermediate
+target-firm, large combined and large target-firm thresholds. I then
+compare these counterfactual values with the thresholds actually
+implemented by the Commission to determine which benchmark most closely
+tracks the observed statutory path.
+
+I use 2001 rather than 1999 as the principal starting point. The 1999
+values were the initial thresholds under the new merger-control regime,
+while the 2001 revision followed an early review of merger activity. The
+1999–2001 adjustment is therefore reported descriptively but is not
+treated as evidence of a systematic threshold-adjustment rule. Njisane
+et al. similarly describe the 2001 change as following a review of
+merger trends since the inception of the Competition Act.
+:contentReference<span index="0">oaicite:0</span>
+
+### Question 2: What if the benchmark were reconsidered at each revision?
+
+Had the Commission reconsidered the appropriate benchmark at each
+threshold revision, what adjustment would each macroeconomic benchmark
+have implied over the individual intervals 2001–2009, 2009–2017 and
+2017–2026?
+
+Unlike Question 1, the thresholds are re-anchored to the actual
+statutory value at the beginning of each interval. The percentage growth
+in CPI, the GDP deflator, nominal GDP, real GDP and JSE market
+capitalisation over that interval is then applied to that statutory
+starting value. This allows the analysis to ask whether different
+revisions appear to have followed different economic benchmarks rather
+than assuming a single adjustment rule throughout the entire period.
+
+This is particularly relevant because the Commission’s stated rationale
+has differed across revisions. Njisane et al. report that the 2009
+adjustment was informed by nominal GDP and market capitalisation,
+whereas the 2017 adjustment was based on real GDP growth.
+:contentReference<span index="1">oaicite:1</span>
+
+### Question 3: How large were the revisions relative to alternative threshold-setting methods?
+
+How do the actual statutory adjustments compare with the threshold
+increases examined by Njisane et al. and with the World Bank’s
+economy-size benchmarking approach?
+
+Njisane et al.’s scenarios are used as sensitivity benchmarks . Their
+target-firm thresholds are increased by 5%, 10%, 15% and 20%, while
+combined thresholds are increased by 10%, 20%, 30%, 40% and 45%. They
+also examine joint increases of 15% in the target threshold with either
+20% or 40% in the combined threshold. These percentage bands are
+compared with the actual percentage change in each South African
+threshold over the 2001–2009, 2009–2017 and 2017–2026 intervals.
+:contentReference<span index="2">oaicite:2</span>
+
+The World Bank exercise is treated separately because it is a
+cross-country benchmarking model rather than a time-series indexation
+rule. It estimates the relationship between the logarithm of merger
+thresholds and the logarithm of GDP across comparable jurisdictions and
+then predicts thresholds for an economy of South Africa’s size. The
+resulting World Bank estimates are compared with the actual South
+African thresholds and with the macroeconomic counterfactuals from
+Questions 1 and 2. :contentReference<span index="3">oaicite:3</span>
+
+### Question 4: How have the comparator jurisdictions evolved?
+
+What were the initial and current merger-notification thresholds in the
+United States, European Union and Brazil; how have these thresholds been
+adjusted over time; what considerations determine their levels; and how
+do their threshold designs differ from South Africa’s?
+
+The comparison therefore considers more than nominal threshold values.
+For each jurisdiction I record the initial and current threshold, the
+threshold metric, whether adjustment is automatic or discretionary, the
+economic variable used for adjustment where applicable, the frequency of
+adjustment, and whether the threshold applies to the transaction, the
+combined firms, the target firm or individual merging parties.
+
+The United States provides an example of systematic indexation: its
+principal HSR thresholds are adjusted annually according to changes in
+gross national product. The minimum size-of-transaction threshold,
+originally \$50 million, is \$133.9 million in 2026.
+:contentReference<span index="4">oaicite:4</span> The EU instead relies
+primarily on turnover thresholds: the original €5 billion worldwide
+combined and €250 million EU-wide individual thresholds remain part of
+the current regime, with an additional lower multi-jurisdictional route
+introduced subsequently.
+:contentReference<span index="5">oaicite:5</span> Brazil uses domestic
+turnover tests for two different economic groups; the operative
+thresholds have been R\$750 million and R\$75 million since 2012.
+:contentReference<span index="6">oaicite:6</span> These systems provide
+useful contrasts with South Africa’s combined-firm and target-firm
+turnover-or-asset thresholds and its episodic adjustment process.
+
+### Macroeconomic data and measurement
+
+All benchmark comparisons are based on growth rates rather than the
+absolute levels of the macroeconomic indices. Rebasings therefore do not
+affect the results provided that each growth calculation uses a
+consistently linked historical series.
+
+CPI is measured using the official headline CPI series, currently
+referenced to December 2024 = 100. The GDP deflator is treated as a
+price-level measure and is constructed or obtained from a consistent
+national-accounts vintage. Nominal GDP is measured at current prices,
+while real GDP is measured at constant 2015 prices. The financial-market
+benchmark is JSE market capitalisation.
+
+For each benchmark $B$, the counterfactual threshold is calculated as:
+
+$$T_{t}^{B}=T_{s}\left(\frac{B_t}{B_s}\right),$$
+
+where $T_s$ is the statutory threshold at the chosen anchor date, $B_s$
+is the benchmark value at that date, and $B_t$ is its value at the
+subsequent revision date. The implied percentage adjustment is:
+
+$$g_{s,t}^{B}=\left(\frac{B_t}{B_s}-1\right)\times100.$$
+
+For Question 1, $s=2001$ throughout. For Question 2, $s$ is reset to the
+statutory threshold at the beginning of each interval: 2001, 2009 and
+2017.
