@@ -347,7 +347,7 @@ MA<GO>.
     ##   ..   `Attr: Any Stake-Change Type Tagged` = col_logical(),
     ##   ..   `Attr: Formal Offer Process (Tender/Mandatory/Squeeze Out)` = col_logical()
     ##   .. )
-    ##  - attr(*, "problems")=<pointer: 0x000001fe889fdd50>
+    ##  - attr(*, "problems")=<pointer: 0x000001bf442fdd10>
 
     ## [1] 633  73
 
@@ -1014,6 +1014,218 @@ then predicts thresholds for an economy of South Africa’s size. The
 resulting World Bank estimates are compared with the actual South
 African thresholds and with the macroeconomic counterfactuals from
 Questions 1 and 2. :contentReference<span index="3">oaicite:3</span>
+
+As a sensitivity exercise, the percentage-adjustment scenarios
+considered by Njisane et al. are applied to the statutory threshold in
+force at the beginning of each revision interval. This extends their
+scenario-based approach, originally applied to the October 2017
+thresholds and the 2016–2018 merger database, to the historical
+threshold path.How does the magnitude of the actual revision compare
+with moderate threshold shocks that prior South African research
+considered plausible enough to test for error-cost consequences?
+
+``` r
+library(tidyverse)
+```
+
+    ## ── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
+    ## ✔ forcats   1.0.1     ✔ stringr   1.6.0
+    ## ✔ lubridate 1.9.5     ✔ tibble    3.3.1
+    ## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+    ## ✖ dplyr::filter()          masks stats::filter()
+    ## ✖ kableExtra::group_rows() masks dplyr::group_rows()
+    ## ✖ dplyr::lag()             masks stats::lag()
+    ## ℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors
+
+``` r
+library(kableExtra)
+
+# ============================================================
+# QUESTION 3 (Njisane et al. 2021 sensitivity comparison)
+# How large were SA's actual threshold revisions relative to
+# the target/combined increases Njisane et al. tested, and what
+# would their two selected joint scenarios have implied at each
+# SA revision point?
+# ============================================================
+
+# ---- 1. Actual SA threshold history (R million) ----
+sa_thresholds <- tribble(
+  ~year, ~int_combined, ~int_target, ~large_combined, ~large_target,
+  2001,      200,           30,           3500,          100,
+  2009,      560,           80,           6600,          190,
+  2017,      600,          100,           6600,          190,
+  2026,     1000,          200,           9500,          280
+)
+
+# Nominal growth between consecutive SA revision points, by limb
+actual_growth <- sa_thresholds %>%
+  pivot_longer(-year, names_to = "limb_code", values_to = "threshold") %>%
+  group_by(limb_code) %>%
+  arrange(year, .by_group = TRUE) %>%
+  mutate(
+    start_year        = lag(year),
+    start_threshold   = lag(threshold),
+    interval          = paste0(start_year, "\u2192", year),
+    actual_growth_pct = 100 * (threshold / start_threshold - 1)
+  ) %>%
+  ungroup() %>%
+  filter(!is.na(start_year)) %>%                 # drops the 1999 anchor row (no lag)
+  mutate(
+    limb_type = if_else(str_detect(limb_code, "target"), "Target", "Combined"),
+    limb = recode(limb_code,
+                  int_combined   = "Intermediate: Combined",
+                  int_target     = "Intermediate: Target",
+                  large_combined = "Large: Combined",
+                  large_target   = "Large: Target")
+  ) %>%
+  select(interval, limb, limb_type,
+         start_threshold, actual_end_threshold = threshold, actual_growth_pct)
+
+# ---- 2. Njisane et al. (2021) single-limb sensitivity scenarios ----
+njisane_scenarios <- tribble(
+  ~limb_type, ~scenario_pct,
+  "Target",    5,  "Target",   10, "Target",   15, "Target",   20,
+  "Combined", 10,  "Combined", 20, "Combined", 30, "Combined", 40, "Combined", 45
+)
+
+njisane_range <- njisane_scenarios %>%
+  group_by(limb_type) %>%
+  summarise(njisane_min = min(scenario_pct),
+            njisane_max = max(scenario_pct), .groups = "drop")
+
+# Closest single Njisane scenario to each actual revision (nearest by pp, no
+# "match" label implied — see note below)
+closest_njisane <- actual_growth %>%
+  left_join(njisane_scenarios, by = "limb_type") %>%
+  mutate(diff_pp = actual_growth_pct - scenario_pct) %>%
+  group_by(interval, limb) %>%
+  slice_min(abs(diff_pp), n = 1, with_ties = FALSE) %>%
+  ungroup() %>%
+  select(interval, limb, closest_njisane_pct = scenario_pct, closest_diff_pp = diff_pp)
+```
+
+    ## Warning in left_join(., njisane_scenarios, by = "limb_type"): Detected an unexpected many-to-many relationship between `x` and `y`.
+    ## ℹ Row 1 of `x` matches multiple rows in `y`.
+    ## ℹ Row 5 of `y` matches multiple rows in `x`.
+    ## ℹ If a many-to-many relationship is expected, set `relationship =
+    ##   "many-to-many"` to silence this warning.
+
+``` r
+# ---- 3. Njisane's two selected JOINT scenarios, applied to each start threshold ----
+joint_scenarios <- tribble(
+  ~scenario_label,             ~target_pct, ~combined_pct,
+  "15%T / 20%C implied",       15,          20,
+  "15%T / 40%C implied",       15,          40
+)
+
+njisane_joint_wide <- actual_growth %>%
+  select(interval, limb, limb_type, start_threshold) %>%
+  crossing(joint_scenarios) %>%
+  mutate(
+    applied_pct       = if_else(limb_type == "Target", target_pct, combined_pct),
+    implied_threshold = start_threshold * (1 + applied_pct / 100)
+  ) %>%
+  select(interval, limb, scenario_label, implied_threshold) %>%
+  pivot_wider(names_from = scenario_label, values_from = implied_threshold)
+
+# ---- 4. ONE combined table ----
+q3_table <- actual_growth %>%
+  left_join(njisane_range,      by = "limb_type") %>%
+  mutate(
+    njisane_range_label = paste0(njisane_min, "\u2013", njisane_max, "%"),
+    position_vs_range = case_when(
+      actual_growth_pct < njisane_min ~ "Below range",
+      actual_growth_pct > njisane_max ~ "Above range",
+      TRUE ~ "Within range"
+    )
+  ) %>%
+  left_join(closest_njisane,    by = c("interval", "limb")) %>%
+  left_join(njisane_joint_wide, by = c("interval", "limb")) %>%
+  transmute(
+    Interval              = interval,
+    Limb                  = limb,
+    `Start (R'm)`         = round(start_threshold, 1),
+    `Actual End (R'm)`    = round(actual_end_threshold, 1),
+    `Actual Growth %`     = round(actual_growth_pct, 1),
+    `Njisane Range`       = njisane_range_label,
+    `Position`            = position_vs_range,
+    `Closest Njisane %`   = closest_njisane_pct,
+    `Diff (pp)`           = round(closest_diff_pp, 1),
+    `15%T/20%C (R'm)`     = round(`15%T / 20%C implied`, 1),
+    `15%T/40%C (R'm)`     = round(`15%T / 40%C implied`, 1)
+  ) %>%
+  arrange(Interval, Limb)
+
+print(
+  kbl(q3_table, format = "latex", booktabs = TRUE, longtable = TRUE,
+      caption = "SA threshold revisions vs. Njisane et al. (2021) sensitivity scenarios",
+      label = "tab:q3-njisane") %>%
+    kable_styling(latex_options = c("scale_down", "hold_position", "repeat_header"),
+                  font_size = 7) %>%
+    row_spec(0, bold = TRUE)
+)
+```
+
+    ## Warning in styling_latex_scale(out, table_info, "down"): Longtable cannot be
+    ## resized.
+
+    ## \begingroup\fontsize{7}{9}\selectfont
+    ## 
+    ## \begin{longtable}[t]{llrrrllrrrr}
+    ## \caption{\label{tab:tab:q3-njisane}SA threshold revisions vs. Njisane et al. (2021) sensitivity scenarios}\\
+    ## \toprule
+    ## \textbf{Interval} & \textbf{Limb} & \textbf{Start (R'm)} & \textbf{Actual End (R'm)} & \textbf{Actual Growth \%} & \textbf{Njisane Range} & \textbf{Position} & \textbf{Closest Njisane \%} & \textbf{Diff (pp)} & \textbf{15\%T/20\%C (R'm)} & \textbf{15\%T/40\%C (R'm)}\\
+    ## \midrule
+    ## \endfirsthead
+    ## \caption[]{SA threshold revisions vs. Njisane et al. (2021) sensitivity scenarios \textit{(continued)}}\\
+    ## \toprule
+    ## \textbf{Interval} & \textbf{Limb} & \textbf{Start (R'm)} & \textbf{Actual End (R'm)} & \textbf{Actual Growth \%} & \textbf{Njisane Range} & \textbf{Position} & \textbf{Closest Njisane \%} & \textbf{Diff (pp)} & \textbf{15\%T/20\%C (R'm)} & \textbf{15\%T/40\%C (R'm)}\\
+    ## \midrule
+    ## \endhead
+    ## 
+    ## \endfoot
+    ## \bottomrule
+    ## \endlastfoot
+    ## 2001→2009 & Intermediate: Combined & 200 & 560 & 180.0 & 10–45\% & Above range & 45 & 135.0 & 240.0 & 280.0\\
+    ## 2001→2009 & Intermediate: Target & 30 & 80 & 166.7 & 5–20\% & Above range & 20 & 146.7 & 34.5 & 34.5\\
+    ## 2001→2009 & Large: Combined & 3500 & 6600 & 88.6 & 10–45\% & Above range & 45 & 43.6 & 4200.0 & 4900.0\\
+    ## 2001→2009 & Large: Target & 100 & 190 & 90.0 & 5–20\% & Above range & 20 & 70.0 & 115.0 & 115.0\\
+    ## 2009→2017 & Intermediate: Combined & 560 & 600 & 7.1 & 10–45\% & Below range & 10 & -2.9 & 672.0 & 784.0\\
+    ## \addlinespace
+    ## 2009→2017 & Intermediate: Target & 80 & 100 & 25.0 & 5–20\% & Above range & 20 & 5.0 & 92.0 & 92.0\\
+    ## 2009→2017 & Large: Combined & 6600 & 6600 & 0.0 & 10–45\% & Below range & 10 & -10.0 & 7920.0 & 9240.0\\
+    ## 2009→2017 & Large: Target & 190 & 190 & 0.0 & 5–20\% & Below range & 5 & -5.0 & 218.5 & 218.5\\
+    ## 2017→2026 & Intermediate: Combined & 600 & 1000 & 66.7 & 10–45\% & Above range & 45 & 21.7 & 720.0 & 840.0\\
+    ## 2017→2026 & Intermediate: Target & 100 & 200 & 100.0 & 5–20\% & Above range & 20 & 80.0 & 115.0 & 115.0\\
+    ## \addlinespace
+    ## 2017→2026 & Large: Combined & 6600 & 9500 & 43.9 & 10–45\% & Within range & 45 & -1.1 & 7920.0 & 9240.0\\
+    ## 2017→2026 & Large: Target & 190 & 280 & 47.4 & 5–20\% & Above range & 20 & 27.4 & 218.5 & 218.5\\*
+    ## \end{longtable}
+    ## \endgroup{}
+
+``` r
+# ---- 5. ONE graph: actual growth vs Njisane's tested range, faceted by interval ----
+plot_data <- actual_growth %>% left_join(njisane_range, by = "limb_type")
+
+ggplot(plot_data, aes(x = limb, y = actual_growth_pct)) +
+  geom_col(fill = "grey40", width = 0.6) +
+  geom_errorbar(aes(ymin = njisane_min, ymax = njisane_max),
+                width = 0.15, linewidth = 0.7, colour = "black") +
+  facet_wrap(~ interval, nrow = 1, scales = "free_x") +
+  labs(
+    title = "Actual SA threshold growth vs. Njisane et al. (2021) tested range",
+    subtitle = "Bars: actual nominal growth. Error bars: min–max of Njisane's tested scenarios for that limb type.",
+    x = NULL, y = "Nominal threshold growth (%)"
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.grid.minor = element_blank(),
+    strip.text = element_text(face = "bold")
+  )
+```
+
+![](README_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
 ### Question 4: How have the comparator jurisdictions evolved?
 
