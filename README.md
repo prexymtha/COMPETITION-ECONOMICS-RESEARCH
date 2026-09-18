@@ -1,3 +1,10 @@
+---
+title: "COMPETITION-ECONOMICS-RESEARCH"
+output: github_document
+---
+
+
+
 # COMPETITION-ECONOMICS-RESEARCH
 
 This repository contains code for analysing the evolution of South Africa’s merger notification thresholds from 1999 to 2026. Using Bloomberg Mergers &amp; Acquisitions (M&amp;A) data, together with CPI, nominal and real GDP, and market capitalisation as benchmarks, we compare actual threshold paths to counterfactual scenarios against other countries
@@ -96,6 +103,9 @@ Unique transactions	6,511
 ANALYSIS SAMPLE (3 or 4 values)	476
   of which Withdrawn or Proposed	30
 Source: Bloomberg MA<GO>.
+
+
+
 
 
 
