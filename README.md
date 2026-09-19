@@ -1844,3 +1844,6 @@ write.csv(round(C, 2), "corr_matrix.csv")
 
 <img width="2431" height="2178" alt="corr_heatmap" src="https://github.com/user-attachments/assets/91336354-78e7-49fd-99e9-ef2873b42fe9" />
 
+<img width="2977" height="2010" alt="image" src="https://github.com/user-attachments/assets/a17de9ae-5058-476c-8aef-f8721ad962b2" />
+
+
