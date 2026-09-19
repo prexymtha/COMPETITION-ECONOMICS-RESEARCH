@@ -1,7 +1,7 @@
 COMPETITION ECONOMICS RESEARCH
 ================
 Precious Nhamo
-2026-09-18
+2026-09-19
 
 # COMPETITION-ECONOMICS-RESEARCH
 
@@ -314,7 +314,7 @@ transactions. Dropping them gives 446.*
     ##   ..   `Attr: Any Stake-Change Type Tagged` = col_logical(),
     ##   ..   `Attr: Formal Offer Process (Tender/Mandatory/Squeeze Out)` = col_logical()
     ##   .. )
-    ##  - attr(*, "problems")=<pointer: 0x000001d24d9fde20>
+    ##  - attr(*, "problems")=<pointer: 0x0000017e4a7ffdb0>
 
     ## [1] 633  73
 
@@ -1715,3 +1715,129 @@ consequential. Specifically, it examines whether application of the
 alternative threshold paths materially changes the distribution of
 observed transactions between small, intermediate and large merger
 classifications.
+
+# BLOOMBERG DATA
+
+``` r
+# ============================================================
+# Correlation matrix: financials, deal attributes, sectors
+# Complete-data (4/4) sample, n = 603
+# ============================================================
+
+library(readr)
+library(dplyr)
+library(corrplot)
+```
+
+    ## Warning: package 'corrplot' was built under R version 4.6.1
+
+    ## corrplot 0.95 loaded
+
+``` r
+madata <- read_csv("data/ma_classification_blended.csv", show_col_types = FALSE)
+
+# ---- Complete-data sample only ----
+base <- madata %>% filter(`Data Completeness` == "Full (4/4)")
+
+# ---- Build the variable matrix ----
+# Financials are log10-transformed (heavily right-skewed, as the
+# distribution panel showed). Binary variables coded 0/1.
+M <- base %>%
+  transmute(
+    # --- financials (logged) ---
+    `Target assets`      = log10(if_else(`Target Total Assets` > 0, `Target Total Assets`, NA_real_)),
+    `Target turnover`    = log10(if_else(`Target Revenue` > 0, `Target Revenue`, NA_real_)),
+    `Acquirer assets`    = log10(if_else(`Acquirer Total Assets` > 0, `Acquirer Total Assets`, NA_real_)),
+    `Acquirer turnover`  = log10(if_else(`Acquirer Revenue` > 0, `Acquirer Revenue`, NA_real_)),
+
+    # --- derived ---
+    combined_assets      = `Acquirer Total Assets` + `Target Total Assets`,
+    combined_turnover    = `Acquirer Revenue` + `Target Revenue`,
+    `Asset intensity`    = log10(if_else(combined_turnover > 0 & combined_assets / combined_turnover > 0,
+                                          combined_assets / combined_turnover, NA_real_)),
+
+    # --- deal structure (continuous) ---
+    `% owned (pre-deal)` = `Percent Owned`,
+    `% sought`           = `Percent Sought`,
+
+    # --- outcome / type indicators ---
+    `Classified Large`   = as.integer(Classification == "Large"),
+    `Completed`          = as.integer(`Deal Status` == "Completed"),
+    `Deal type: M&A`     = as.integer(`Deal Type` == "M&A"),
+    `Listed target`      = as.integer(`Ownership Type` == "Public"),
+
+    # --- attribute flags (only those with >= 25 occurrences) ---
+    `Company takeover`   = as.integer(`Attr: Company Takeover`),
+    `Additional stake`   = as.integer(`Attr: Additional Stake Purchase`),
+    `Cross-border`       = as.integer(`Attr: Cross Border`),
+    `Minority purchase`  = as.integer(`Attr: Minority Purchase`),
+    `Tender offer`       = as.integer(`Attr: Tender Offer`),
+    `Majority purchase`  = as.integer(`Attr: Majority Purchase`),
+    `Private equity`     = as.integer(`Attr: Private Equity`),
+
+    # --- sector ---
+    `Same sector`        = as.integer(`Target Industry Sector` == `Acquirer Industry Sector`),
+    `Tgt: Materials`     = as.integer(`Target Industry Sector` == "Materials"),
+    `Tgt: Financials`    = as.integer(`Target Industry Sector` == "Financials"),
+    `Tgt: Industrials`   = as.integer(`Target Industry Sector` == "Industrials"),
+    `Tgt: Real Estate`   = as.integer(`Target Industry Sector` == "Real Estate")
+  ) %>%
+  select(-combined_assets, -combined_turnover)   # drop intermediates
+
+# ---- Spearman, pairwise complete ----
+# Spearman rather than Pearson: financials are skewed even after logging,
+# and most variables are binary, where rank correlation is the safer default.
+C <- cor(M, method = "spearman", use = "pairwise.complete.obs")
+
+# ---- Plot: lower triangle, diverging scale ----
+corrplot(C,
+         method      = "color",
+         type        = "lower",
+         addCoef.col = "black",
+         number.cex  = 0.45,
+         tl.col      = "black",
+         tl.srt      = 45,
+         tl.cex      = 0.65,
+         col         = colorRampPalette(c("#35588A", "white", "#A83232"))(200),
+         mar         = c(0, 0, 2, 0),
+         title       = "Spearman correlation matrix, complete-data sample (n = 603)")
+```
+
+![](README_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
+
+``` r
+# ---- Strongest pairs, as a sorted table ----
+pairs <- as.data.frame(as.table(C)) %>%
+  filter(as.character(Var1) < as.character(Var2)) %>%   # unique pairs only
+  rename(var1 = Var1, var2 = Var2, rho = Freq) %>%
+  arrange(desc(abs(rho)))
+
+head(pairs, 20)
+```
+
+    ##                  var1              var2        rho
+    ## 1  % owned (pre-deal)  Additional stake  0.9116619
+    ## 2     Acquirer assets Acquirer turnover  0.8622829
+    ## 3       Target assets   Target turnover  0.8213832
+    ## 4    Company takeover    Deal type: M&A  0.8104883
+    ## 5            % sought  Company takeover  0.7286304
+    ## 6            % sought    Deal type: M&A  0.7123763
+    ## 7      Deal type: M&A Minority purchase -0.6851219
+    ## 8     Acquirer assets  Classified Large  0.6695097
+    ## 9    Classified Large     Target assets  0.6124657
+    ## 10  Acquirer turnover  Classified Large  0.5878698
+    ## 11   Company takeover Minority purchase -0.5525478
+    ## 12   Classified Large   Target turnover  0.5234796
+    ## 13    Acquirer assets     Target assets  0.4930321
+    ## 14  Acquirer turnover   Target turnover  0.4725618
+    ## 15    Acquirer assets   Target turnover  0.4249985
+    ## 16    Asset intensity  Tgt: Real Estate  0.4106001
+    ## 17  Acquirer turnover     Target assets  0.3908912
+    ## 18           % sought Minority purchase -0.3848379
+    ## 19 % owned (pre-deal) Minority purchase -0.3759380
+    ## 20   Additional stake Minority purchase -0.3686740
+
+``` r
+# ---- Export ----
+write.csv(round(C, 2), "corr_matrix.csv")
+```
