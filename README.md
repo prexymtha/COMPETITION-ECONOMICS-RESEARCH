@@ -1841,3 +1841,6 @@ head(pairs, 20)
 # ---- Export ----
 write.csv(round(C, 2), "corr_matrix.csv")
 ```
+
+<img width="2431" height="2178" alt="corr_heatmap" src="https://github.com/user-attachments/assets/91336354-78e7-49fd-99e9-ef2873b42fe9" />
+
